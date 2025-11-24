@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:craveai/controllers/app_colors.dart';
 import 'package:craveai/generated/assets.dart';
 import 'package:craveai/views/widgets/common_image_view.dart';
+import 'package:craveai/views/widgets/dynamic_container.dart';
 import 'package:craveai/views/widgets/my_button.dart';
 import 'package:craveai/views/widgets/my_text.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +16,16 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final List<String> tags = [
+    "#Flirty",
+    "#Romantic",
+    "#Supportive",
+    "#Funny",
+    "#Intelligent",
+    "#Adventurous",
+    "#Caring",
+    "#Mysterious",
+  ];
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -117,10 +128,19 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ],
               ),
+              const SizedBox(height: 20),
               Container(
                 decoration: BoxDecoration(
                   color: AppColors.primary.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(15),
+                  gradient: LinearGradient(
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                    colors: [
+                      AppColors.primary,
+                      Color(0xFFD01005).withValues(alpha: 0.06), // red
+                    ],
+                  ),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.only(
@@ -197,11 +217,29 @@ class _HomeScreenState extends State<HomeScreen> {
                       Expanded(
                         child: CommonImageView(
                           imagePath: Assets.aiGroup,
-                          height: 30,
+                          height: 90,
+                          width: double.maxFinite,
+                          fit: BoxFit.contain,
                         ),
                       ),
                     ],
                   ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Divider(color: Colors.white.withValues(alpha: 0.1), thickness: 1),
+              const SizedBox(height: 10),
+              SizedBox(
+                height: 40, // enough for dynamic text container
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  itemBuilder: (context, index) {
+                    return DynamicContainer(text: tags[index]);
+                  },
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(width: 10),
+                  itemCount: tags.length,
                 ),
               ),
             ],
