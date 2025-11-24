@@ -1,9 +1,11 @@
 import 'package:craveai/controllers/app_colors.dart';
 import 'package:craveai/generated/assets.dart';
+import 'package:craveai/views/screens/auth_screens/login_screen.dart';
 import 'package:craveai/views/widgets/common_image_view.dart';
 import 'package:craveai/views/widgets/my_button.dart';
 import 'package:craveai/views/widgets/my_text.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
@@ -57,7 +59,14 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 MyText(text: "Already have an account?", size: 13),
-                MyText(text: " Sign In", color: AppColors.secondary, size: 14),
+                MyText(
+                  text: " Sign In",
+                  color: AppColors.secondary,
+                  size: 14,
+                  onTap: () {
+                    Get.to(() => const LoginScreen());
+                  },
+                ),
               ],
             ),
           ],
