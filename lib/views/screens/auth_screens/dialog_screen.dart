@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:craveai/controllers/app_colors.dart';
 import 'package:craveai/generated/assets.dart';
 import 'package:craveai/views/widgets/common_image_view.dart';
@@ -29,7 +27,7 @@ class DialogScreen extends StatelessWidget {
                   width: 50,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.grey.withOpacity(0.3),
+                    color: Colors.grey.withValues(alpha: 0.3),
                   ),
                   child: Center(
                     child: const Icon(

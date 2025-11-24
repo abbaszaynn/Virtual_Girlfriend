@@ -23,12 +23,12 @@ class MyTextField extends StatefulWidget {
   final VoidCallback? onTap;
   final TextInputType? keyboardType;
   final double? height;
-  final double? Width;
+  final double? width;
   final FormFieldValidator<String>? validator;
   final bool? showVisibilityToggle; // NEW: show/hide password icon
 
   MyTextField({
-    Key? key,
+    super.key,
     this.controller,
     this.hint,
     this.label,
@@ -53,10 +53,10 @@ class MyTextField extends StatefulWidget {
     this.focusNode,
     this.radius,
     this.height = 48,
-    this.Width,
+    this.width,
     this.validator,
     this.showVisibilityToggle = false, // NEW: default false
-  }) : super(key: key);
+  });
 
   @override
   State<MyTextField> createState() => _MyTextFieldState();
@@ -107,14 +107,14 @@ class _MyTextFieldState extends State<MyTextField> {
                 size: widget.labelSize ?? 12,
                 paddingBottom: 5,
                 color: AppColors.primary,
-                fontFamily: AppFonts.Inter,
+                fontFamily: AppFonts.inter,
                 weight: widget.labelWeight ?? FontWeight.w400,
               ),
             Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(widget.radius ?? 12),
                 border: Border.all(
-                  color: Colors.white.withOpacity(0.20),
+                  color: Colors.white.withValues(alpha: 0.20),
                   width: 1,
                 ),
               ),
@@ -124,7 +124,7 @@ class _MyTextFieldState extends State<MyTextField> {
                   filter: ImageFilter.blur(sigmaX: 0, sigmaY: 0),
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.05),
+                      color: Colors.white.withValues(alpha: 0.05),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -142,8 +142,9 @@ class _MyTextFieldState extends State<MyTextField> {
                           readOnly: widget.isReadOnly ?? false,
                           controller: widget.controller,
                           onChanged: (val) {
-                            if (widget.onChanged != null)
+                            if (widget.onChanged != null) {
                               widget.onChanged!(val);
+                            }
                             final ctl = widget.controller;
                             if (ctl != null) {
                               final v = ctl.value;
@@ -162,7 +163,7 @@ class _MyTextFieldState extends State<MyTextField> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w400,
-                            fontFamily: AppFonts.Inter,
+                            fontFamily: AppFonts.inter,
                             decoration: TextDecoration.none,
                             color: Colors.white,
                           ),
@@ -174,7 +175,7 @@ class _MyTextFieldState extends State<MyTextField> {
                               borderSide: BorderSide.none,
                             ),
                             filled: true,
-                            fillColor: Colors.white.withOpacity(0.02),
+                            fillColor: Colors.white.withValues(alpha: 0.02),
                             prefixIcon: widget.prefix,
                             suffixIcon: widget.showVisibilityToggle == true
                                 ? IconButton(
@@ -200,8 +201,8 @@ class _MyTextFieldState extends State<MyTextField> {
                                 : '',
                             hintStyle: TextStyle(
                               fontSize: widget.hintsize ?? 14,
-                              fontFamily: AppFonts.Inter,
-                              color: Colors.grey.withOpacity(0.6),
+                              fontFamily: AppFonts.inter,
+                              color: Colors.grey.withValues(alpha: 0.6),
                               fontWeight: widget.hintWeight ?? FontWeight.w400,
                             ),
                             errorStyle: const TextStyle(

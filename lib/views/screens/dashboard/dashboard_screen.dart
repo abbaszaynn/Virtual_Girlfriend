@@ -1,150 +1,217 @@
+import 'dart:ui';
+import 'package:craveai/controllers/app_colors.dart';
 import 'package:craveai/views/screens/discover/discover_screen.dart';
 import 'package:craveai/views/screens/home/home_screen.dart';
 import 'package:craveai/views/screens/profile/profile_screen.dart';
 import 'package:craveai/views/screens/setting/setting_screen.dart';
 import 'package:flutter/material.dart';
 
+// Import your screens
+
 class CustomBottomNav extends StatefulWidget {
+  const CustomBottomNav({super.key});
+
   @override
   State<CustomBottomNav> createState() => _CustomBottomNavState();
 }
 
-class _CustomBottomNavState extends State<CustomBottomNav> {
-  int selectedIndex = 0;
+class _CustomBottomNavState extends State<CustomBottomNav>
+    with SingleTickerProviderStateMixin {
+  int _currentIndex = 0;
 
-  final icons = [
-    Icons.home_rounded,
-    Icons.explore_rounded,
-    Icons.person_rounded,
-    Icons.settings_rounded,
+  final List<IconData> _icons = [
+    Icons.home_outlined,
+    Icons.explore_outlined,
+    Icons.person_outline,
+    Icons.settings_outlined,
   ];
 
-  // ✅ Your screens list here
   final List<Widget> _screens = [
-    HomeScreen(),
-    DiscoverScreen(),
-    ProfileScreen(),
-    SettingScreen(),
+    const HomeScreen(),
+    const DiscoverScreen(),
+    const ProfileScreen(),
+    const SettingScreen(),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1E1E1E), // dark background
-      // ✅ Show current screen
-      body: _screens[selectedIndex],
+      extendBody: true,
+      body: _screens[_currentIndex], // Display selected screen
 
-      bottomNavigationBar: SizedBox(
-        height: 115,
-        child: Stack(
-          alignment: Alignment.topCenter,
-          children: [
-            // background bar
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: CustomPaint(
-                painter: NavBarPainter(),
-                child: SizedBox(height: 85),
-              ),
-            ),
-
-            // Floating icons
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: List.generate(icons.length, (index) {
-                  bool isSelected = index == selectedIndex;
-
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() => selectedIndex = index);
-                    },
-                    child: Column(
-                      children: [
-                        AnimatedContainer(
-                          duration: Duration(milliseconds: 200),
-                          width: isSelected ? 75 : 0,
-                          height: isSelected ? 75 : 0,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: isSelected
-                                ? Colors.black.withOpacity(0.35)
-                                : Colors.transparent,
-                          ),
-                          child: isSelected
-                              ? Icon(icons[index], color: Colors.red, size: 40)
-                              : null,
-                        ),
-
-                        if (!isSelected)
-                          Icon(
-                            icons[index],
-                            size: 32,
-                            color: Colors.grey.shade400,
-                          ),
-                      ],
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.only(bottom: 22),
+        child: SizedBox(
+          height: 95,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              // Gradient background behind nav bar (left side only)
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
+                  child: Container(
+                    height: 70,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.center,
+                        end: Alignment.centerRight,
+                        colors: [
+                          Colors.transparent,
+                          const Color(0xFFD01005).withValues(alpha: 0.08),
+                        ],
+                      ),
                     ),
-                  );
-                }),
+                  ),
+                ),
               ),
+
+              // Glassy nav bar with cutout
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                    child: CustomPaint(
+                      painter: GlassNavBarPainter(
+                        notchX: _circleCenterX(context, _currentIndex),
+                        notchWidth: 80,
+                        notchHeight: 100,
+                      ),
+                      child: SizedBox(
+                        height: 70,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: List.generate(_icons.length, (index) {
+                            bool isSelected = _currentIndex == index;
+                            return GestureDetector(
+                              onTap: () =>
+                                  setState(() => _currentIndex = index),
+                              child: SizedBox(
+                                width: 56,
+                                height: 70,
+                                child: Center(
+                                  child: isSelected
+                                      ? const SizedBox(width: 28, height: 28)
+                                      : Icon(
+                                          _icons[index],
+                                          size: 28,
+                                          color: Colors.white70,
+                                        ),
+                                ),
+                              ),
+                            );
+                          }),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              // Floating circle with red fill for selected icon
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+                bottom: 28,
+                left: _circleCenterX(context, _currentIndex) - 28,
+                child: _buildCircle(_icons[_currentIndex], selected: true),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  double _circleCenterX(BuildContext context, int index) {
+    double width = MediaQuery.of(context).size.width;
+    double itemWidth = width / _icons.length;
+    return itemWidth * index + itemWidth / 2;
+  }
+
+  Widget _buildCircle(IconData icon, {bool selected = false}) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(28),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.2),
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.2),
+              width: 1.5,
             ),
-          ],
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.25),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Center(
+            child: Icon(
+              icon,
+              size: 28,
+              color: selected ? AppColors.secondary : Colors.white,
+            ),
+          ),
         ),
       ),
     );
   }
 }
 
-// 🎨 Exact painter that matches your image
-class NavBarPainter extends CustomPainter {
+class GlassNavBarPainter extends CustomPainter {
+  final double notchX;
+  final double notchWidth;
+  final double notchHeight;
+
+  GlassNavBarPainter({
+    required this.notchX,
+    this.notchWidth = 80,
+    this.notchHeight = 100,
+  });
+
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..shader = const LinearGradient(
-        begin: Alignment.centerLeft,
-        end: Alignment.centerRight,
-        colors: [Color(0xFF5A5A5A), Color(0xFF6B6A6A), Color(0xFF805151)],
-      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+    final Paint glassPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.1)
+      ..style = PaintingStyle.fill;
 
-    Path path = Path();
-    double curveRadius = 40;
-    double circleRadius = 50;
+    Path path = Path()
+      ..moveTo(0, 0)
+      ..lineTo(size.width, 0)
+      ..lineTo(size.width, size.height)
+      ..lineTo(0, size.height)
+      ..close();
 
-    path.moveTo(0, curveRadius);
-    path.quadraticBezierTo(0, 0, curveRadius, 0);
+    canvas.drawPath(path, glassPaint);
 
-    // Cut-out shape for selected circle
-    path.lineTo(size.width * 0.18, 0);
-    path.arcToPoint(
-      Offset(size.width * 0.18 + circleRadius, 0),
-      radius: Radius.circular(circleRadius),
-      clockwise: false,
+    final Paint clearPaint = Paint()
+      ..blendMode = BlendMode.clear
+      ..style = PaintingStyle.fill;
+
+    Rect notchRect = Rect.fromCenter(
+      center: Offset(notchX, 0),
+      width: notchWidth,
+      height: notchHeight,
     );
 
-    path.lineTo(size.width - curveRadius, 0);
-    path.quadraticBezierTo(size.width, 0, size.width, curveRadius);
-
-    path.lineTo(size.width, size.height - curveRadius);
-    path.quadraticBezierTo(
-      size.width,
-      size.height,
-      size.width - curveRadius,
-      size.height,
-    );
-
-    path.lineTo(curveRadius, size.height);
-    path.quadraticBezierTo(0, size.height, 0, size.height - curveRadius);
-
-    path.close();
-
-    canvas.drawPath(path, paint);
+    canvas.drawOval(notchRect, clearPaint);
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(GlassNavBarPainter oldDelegate) =>
+      oldDelegate.notchX != notchX;
 }

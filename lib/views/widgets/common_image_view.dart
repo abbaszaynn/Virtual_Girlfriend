@@ -18,6 +18,7 @@ class CommonImageView extends StatelessWidget {
   final String placeHolder;
 
   CommonImageView({
+    super.key,
     this.url,
     this.imagePath,
     this.svgPath,

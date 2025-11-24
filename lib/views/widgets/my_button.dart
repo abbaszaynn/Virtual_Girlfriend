@@ -97,7 +97,7 @@ class MyButton extends StatelessWidget {
                   paddingLeft: hasicon ? 10 : 0,
                   paddingRight: hasicon ? 10 : 0,
                   text: buttonText,
-                  fontFamily: AppFonts.Inter,
+                  fontFamily: AppFonts.inter,
                   size: fontSize,
                   letterSpacing: 0.5,
                   color: fontColor ?? AppColors.primary,
@@ -178,6 +178,7 @@ class MyBorderButton extends StatelessWidget {
 // ignore: must_be_immutable
 class CustomButton extends StatelessWidget {
   CustomButton({
+    super.key,
     required this.buttonText,
     required this.onTap,
     this.height = 51,
@@ -215,16 +216,16 @@ class CustomButton extends StatelessWidget {
           splashColor: AppColors.secondary.withValues(alpha: 0.1),
           highlightColor: AppColors.secondary.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(radius ?? 8),
-          child: customChild != null
-              ? customChild
-              : Center(
-                  child: MyText(
-                    text: buttonText,
-                    size: textSize ?? 18,
-                    weight: weight ?? FontWeight.w600,
-                    color: textColor ?? AppColors.primary,
-                  ),
+          child:
+              customChild ??
+              Center(
+                child: MyText(
+                  text: buttonText,
+                  size: textSize ?? 18,
+                  weight: weight ?? FontWeight.w600,
+                  color: textColor ?? AppColors.primary,
                 ),
+              ),
         ),
       ),
     );
