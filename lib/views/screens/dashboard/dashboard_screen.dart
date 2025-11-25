@@ -42,7 +42,7 @@ class _CustomBottomNavState extends State<CustomBottomNav>
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.only(bottom: 22),
         child: SizedBox(
-          height: 95,
+          height: 80,
           child: Stack(
             clipBehavior: Clip.none,
             children: [

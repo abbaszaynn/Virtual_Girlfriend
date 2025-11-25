@@ -18,7 +18,7 @@ class MyButton extends StatelessWidget {
     this.width,
     this.backgroundColor,
     this.fontColor,
-    this.fontSize = 17,
+    this.fontSize = 14,
     this.outlineColor = Colors.transparent,
     this.radius = 25,
     this.svgIcon,
@@ -147,7 +147,7 @@ class MyBorderButton extends StatelessWidget {
       height: height,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(radius ?? 25),
-        color: bgColor ?? Color(0xFF171719),
+        color: bgColor ?? AppColors.secondary,
         border: Border.all(width: 1.0, color: borderColor ?? Color(0xA3EADBBD)),
       ),
       child: Material(

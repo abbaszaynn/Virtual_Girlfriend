@@ -9,4 +9,5 @@ class Assets {
   static const String dLogo = 'images/d_logo.png';
   static const String aiIcon = 'images/ai_icon.png';
   static const String aiGroup = 'images/ai_group.png';
+  static const String maya = 'images/maya.png';
 }
