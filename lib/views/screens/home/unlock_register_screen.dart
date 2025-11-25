@@ -1,6 +1,7 @@
 import 'package:craveai/controllers/app_colors.dart';
 import 'package:craveai/generated/assets.dart';
 import 'package:craveai/views/widgets/common_image_view.dart';
+import 'package:craveai/views/widgets/my_button.dart';
 import 'package:craveai/views/widgets/my_text.dart';
 import 'package:craveai/views/widgets/my_text_field.dart';
 import 'package:flutter/material.dart';
@@ -24,6 +25,7 @@ class _UnlockRegisterScreenState extends State<UnlockRegisterScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const SizedBox(height: 40),
               CommonImageView(
                 imagePath: Assets.logo,
                 height: 50,
@@ -62,6 +64,18 @@ class _UnlockRegisterScreenState extends State<UnlockRegisterScreen> {
                 title: "I agree to the Terms of Service and Privacy Policy",
                 value: "option2",
                 subtitle: "Your comfort and privacy always come first.",
+              ),
+              const SizedBox(height: 30),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20.0,
+                  vertical: 12,
+                ),
+                child: MyButton(
+                  onTap: () {},
+                  buttonText: "Create an account",
+                  radius: 12,
+                ),
               ),
             ],
           ),
