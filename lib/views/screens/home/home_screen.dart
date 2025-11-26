@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:craveai/controllers/app_colors.dart';
 import 'package:craveai/generated/assets.dart';
 import 'package:craveai/views/screens/categories_screens/more_categories_screen.dart';
+import 'package:craveai/views/screens/create_ai_gf_screens/create_ai_gf_screen.dart';
 import 'package:craveai/views/screens/home/detail_screen.dart';
 import 'package:craveai/views/widgets/categories_card.dart';
 import 'package:craveai/views/widgets/common_image_view.dart';
@@ -192,29 +193,34 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               const SizedBox(height: 10),
 
-                              Container(
-                                height: 30,
-                                width: 140,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(6),
-                                  color: AppColors.secondary,
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Row(
-                                    children: [
-                                      CommonImageView(
-                                        imagePath: Assets.aiIcon,
-                                        height: 20,
-                                      ),
-                                      const SizedBox(width: 6),
-                                      MyText(
-                                        text: "Create AI Girlfriend",
-                                        size: 10,
-                                        weight: FontWeight.w600,
-                                        color: AppColors.primary,
-                                      ),
-                                    ],
+                              InkWell(
+                                onTap: () {
+                                  Get.to(() => CreateAiGfScreen());
+                                },
+                                child: Container(
+                                  height: 30,
+                                  width: 140,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(6),
+                                    color: AppColors.secondary,
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Row(
+                                      children: [
+                                        CommonImageView(
+                                          imagePath: Assets.aiIcon,
+                                          height: 20,
+                                        ),
+                                        const SizedBox(width: 6),
+                                        MyText(
+                                          text: "Create AI Girlfriend",
+                                          size: 10,
+                                          weight: FontWeight.w600,
+                                          color: AppColors.primary,
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
