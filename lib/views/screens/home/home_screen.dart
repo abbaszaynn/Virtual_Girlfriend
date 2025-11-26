@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:craveai/controllers/app_colors.dart';
 import 'package:craveai/generated/assets.dart';
+import 'package:craveai/views/screens/categories_screens/more_categories_screen.dart';
 import 'package:craveai/views/screens/home/detail_screen.dart';
 import 'package:craveai/views/widgets/categories_card.dart';
 import 'package:craveai/views/widgets/common_image_view.dart';
@@ -288,7 +289,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         padding: const EdgeInsets.only(left: 100.0),
                         child: MyBorderButton(
                           buttonText: "see More",
-                          onTap: () {},
+                          onTap: () {
+                            Get.to(() => MoreCategoriesScreen());
+                          },
                           radius: 8,
                           bgColor: Colors.transparent,
                           height: 30,
