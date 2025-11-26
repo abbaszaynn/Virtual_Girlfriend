@@ -1,10 +1,12 @@
 import 'package:craveai/controllers/app_colors.dart';
 import 'package:craveai/generated/assets.dart';
+import 'package:craveai/views/screens/home/unlock_premium_features_screen.dart';
 import 'package:craveai/views/widgets/common_image_view.dart';
 import 'package:craveai/views/widgets/my_button.dart';
 import 'package:craveai/views/widgets/my_text.dart';
 import 'package:craveai/views/widgets/my_text_field.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class UnlockRegisterScreen extends StatefulWidget {
   const UnlockRegisterScreen({super.key});
@@ -72,7 +74,9 @@ class _UnlockRegisterScreenState extends State<UnlockRegisterScreen> {
                   vertical: 12,
                 ),
                 child: MyButton(
-                  onTap: () {},
+                  onTap: () {
+                    Get.to(() => UnlockPremiumFeaturesScreen());
+                  },
                   buttonText: "Create an account",
                   radius: 12,
                 ),
