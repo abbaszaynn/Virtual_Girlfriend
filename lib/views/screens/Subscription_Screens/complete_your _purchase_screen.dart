@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:craveai/controllers/app_colors.dart';
+import 'package:craveai/views/widgets/my_button.dart';
 import 'package:craveai/views/widgets/my_text.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -165,6 +166,8 @@ class _CompleteYourPurchaseScreenState
                 Divider(color: AppColors.primary.withValues(alpha: 0.2)),
                 const SizedBox(height: 20),
                 MyText(text: "Choose Payment Method", size: 12),
+                const SizedBox(height: 12),
+
                 ...List.generate(paymentMethod.length, (index) {
                   final item = paymentMethod[index];
                   return Padding(
@@ -176,6 +179,174 @@ class _CompleteYourPurchaseScreenState
                     ),
                   );
                 }),
+                const SizedBox(height: 20),
+                Container(
+                  width: double.maxFinite,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 0, sigmaY: 0),
+                      child: Container(
+                        alignment: Alignment.center,
+                        color: Colors.white.withValues(alpha: 0.1),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              MyText(text: "Billing Summary", size: 12),
+                              const SizedBox(height: 12),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  MyText(
+                                    text: "Subtotal",
+                                    size: 12,
+                                    color: AppColors.primary.withValues(
+                                      alpha: 0.08,
+                                    ),
+                                  ),
+                                  MyText(
+                                    text: "\$14.99",
+                                    size: 12,
+                                    color: AppColors.primary,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  MyText(
+                                    text: "Taxes",
+                                    size: 12,
+                                    color: AppColors.primary.withValues(
+                                      alpha: 0.08,
+                                    ),
+                                  ),
+                                  MyText(
+                                    text: "\$0.00",
+                                    size: 12,
+                                    color: AppColors.primary,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              Divider(
+                                color: AppColors.primary.withValues(alpha: 0.2),
+                              ),
+                              const SizedBox(height: 12),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  MyText(
+                                    text: "Total",
+                                    size: 12,
+                                    color: AppColors.primary,
+                                  ),
+                                  MyText(
+                                    text: "\$14.99",
+                                    size: 12,
+                                    color: AppColors.primary,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 20),
+                              MyText(
+                                text:
+                                    "Recurring payments. You can cancel anytime in Settings.",
+                                size: 10,
+                                color: AppColors.primary.withValues(
+                                  alpha: 0.08,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 30),
+                MyButton(onTap: () {}, buttonText: "Pay Now", radius: 12),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.lock_outline_rounded,
+                          size: 12,
+                          color: AppColors.primary.withValues(alpha: 0.08),
+                        ),
+                        const SizedBox(width: 8),
+                        MyText(
+                          text: "100% Secure",
+                          size: 12,
+                          color: AppColors.primary.withValues(alpha: 0.08),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(width: 14),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.auto_mode_outlined,
+                          size: 12,
+                          color: AppColors.primary.withValues(alpha: 0.08),
+                        ),
+                        const SizedBox(width: 8),
+                        MyText(
+                          text: "Auto-renewal control",
+                          size: 12,
+                          color: AppColors.primary.withValues(alpha: 0.08),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.add_card_sharp,
+                      size: 12,
+                      color: AppColors.primary.withValues(alpha: 0.08),
+                    ),
+                    const SizedBox(width: 8),
+                    MyText(
+                      text: "Encrypted Payments",
+                      size: 12,
+                      color: AppColors.primary.withValues(alpha: 0.08),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 30),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    MyText(
+                      text: "Encrypted Payments? ",
+                      size: 12,
+                      color: AppColors.primary.withValues(alpha: 0.08),
+                    ),
+                    const SizedBox(width: 4),
+                    MyText(
+                      text: "Contact Support",
+                      size: 12,
+                      color: AppColors.secondary,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 30),
               ],
             ),
           ),
@@ -223,7 +394,7 @@ class _CompleteYourPurchaseScreenState
           border: Border.all(
             color: isSelected
                 ? AppColors.secondary
-                : Colors.white.withOpacity(0.8),
+                : Colors.white.withValues(alpha: 0.8),
             width: 0.8,
           ),
         ),
@@ -233,7 +404,7 @@ class _CompleteYourPurchaseScreenState
             filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
             child: Container(
               padding: const EdgeInsets.all(16),
-              color: Colors.white.withOpacity(0.03),
+              color: Colors.white.withValues(alpha: 0.03),
               child: Row(
                 children: [
                   // 🔴 Glassy Radio Button Circle
@@ -245,10 +416,10 @@ class _CompleteYourPurchaseScreenState
                       border: Border.all(
                         color: isSelected
                             ? AppColors.secondary
-                            : Colors.white.withOpacity(0.6),
+                            : Colors.white.withValues(alpha: 0.6),
                         width: 2,
                       ),
-                      color: Colors.white.withOpacity(0.1),
+                      color: Colors.white.withValues(alpha: 0.1),
                     ),
                     child: Center(
                       child: Container(
