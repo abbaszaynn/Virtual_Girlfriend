@@ -140,17 +140,22 @@ class HelpSupportScreen extends StatelessWidget {
                               ),
                               const SizedBox(width: 10),
                               Expanded(
-                                child: Container(
-                                  height: 50,
-                                  width: double.infinity,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(12),
-                                    color: AppColors.primary.withValues(
-                                      alpha: 0.08,
+                                child: InkWell(
+                                  onTap: () {
+                                    Get.to(() => ReportScreen());
+                                  },
+                                  child: Container(
+                                    height: 50,
+                                    width: double.infinity,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(12),
+                                      color: AppColors.primary.withValues(
+                                        alpha: 0.08,
+                                      ),
                                     ),
-                                  ),
-                                  child: Center(
-                                    child: MyText(text: "Block/Report"),
+                                    child: Center(
+                                      child: MyText(text: "Block/Report"),
+                                    ),
                                   ),
                                 ),
                               ),
