@@ -1,4 +1,4 @@
-import 'package:craveai/controllers/app_colors.dart';
+import 'package:craveai/generated/app_colors.dart';
 import 'package:craveai/generated/assets.dart';
 import 'package:craveai/views/screens/auth_screens/forget_passord_screen.dart';
 import 'package:craveai/views/screens/dashboard/dashboard_screen.dart';

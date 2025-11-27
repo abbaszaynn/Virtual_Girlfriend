@@ -1,6 +1,7 @@
 import 'dart:ui';
 
-import 'package:craveai/controllers/app_colors.dart';
+import 'package:craveai/generated/app_colors.dart';
+import 'package:craveai/views/screens/help_report_screens/report_screen.dart';
 import 'package:craveai/views/screens/terms_condition_screens/terms_conditions_screen.dart';
 import 'package:craveai/views/widgets/my_button.dart';
 import 'package:craveai/views/widgets/my_text.dart';
@@ -71,10 +72,15 @@ class HelpSupportScreen extends StatelessWidget {
                   subTitle: 'Get help from our support team',
                 ),
                 const SizedBox(height: 16),
-                contactOptionsContainer(
-                  icon: Icons.report_problem,
-                  title: "Report a Problem",
-                  subTitle: 'Facing an issue? Report here',
+                InkWell(
+                  onTap: () {
+                    Get.to(() => ReportScreen());
+                  },
+                  child: contactOptionsContainer(
+                    icon: Icons.report_problem,
+                    title: "Report a Problem",
+                    subTitle: 'Facing an issue? Report here',
+                  ),
                 ),
                 const SizedBox(height: 16),
                 contactOptionsContainer(

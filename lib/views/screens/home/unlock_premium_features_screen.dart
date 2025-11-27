@@ -1,6 +1,6 @@
 import 'dart:ui';
 
-import 'package:craveai/controllers/app_colors.dart';
+import 'package:craveai/generated/app_colors.dart';
 import 'package:craveai/generated/assets.dart';
 import 'package:craveai/views/screens/home/unlock_carve_plus_screen.dart';
 import 'package:craveai/views/widgets/common_image_view.dart';

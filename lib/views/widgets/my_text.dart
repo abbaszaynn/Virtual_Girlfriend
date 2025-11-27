@@ -1,7 +1,7 @@
 // ignore_for_file: unnecessary_string_interpolations
 
-import 'package:craveai/controllers/app_colors.dart';
-import 'package:craveai/controllers/app_fonts.dart';
+import 'package:craveai/generated/app_colors.dart';
+import 'package:craveai/generated/app_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 

@@ -1,5 +1,5 @@
 import 'dart:ui';
-import 'package:craveai/controllers/app_colors.dart';
+import 'package:craveai/generated/app_colors.dart';
 import 'package:craveai/generated/assets.dart';
 import 'package:craveai/views/widgets/common_image_view.dart';
 import 'package:craveai/views/widgets/my_text.dart';

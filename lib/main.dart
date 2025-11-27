@@ -1,4 +1,4 @@
-import 'package:craveai/controllers/app_colors.dart';
+import 'package:craveai/generated/app_colors.dart';
 import 'package:craveai/views/screens/Welcome_screens/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get_navigation/get_navigation.dart';

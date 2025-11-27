@@ -1,6 +1,6 @@
 import 'dart:ui';
 
-import 'package:craveai/controllers/app_colors.dart';
+import 'package:craveai/generated/app_colors.dart';
 import 'package:craveai/views/screens/home/unlock_screen.dart';
 import 'package:craveai/views/widgets/dynamic_container.dart';
 import 'package:craveai/views/widgets/my_button.dart';

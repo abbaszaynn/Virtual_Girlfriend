@@ -1,7 +1,7 @@
 import 'dart:ui';
 
-import 'package:craveai/controllers/app_colors.dart';
-import 'package:craveai/views/screens/help_support_screen.dart';
+import 'package:craveai/generated/app_colors.dart';
+import 'package:craveai/views/screens/help_report_screens/help_support_screen.dart';
 import 'package:craveai/views/widgets/my_button.dart';
 import 'package:craveai/views/widgets/my_text.dart';
 import 'package:flutter/material.dart';

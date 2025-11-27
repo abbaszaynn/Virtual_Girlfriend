@@ -1,5 +1,5 @@
 import 'dart:ui';
-import 'package:craveai/controllers/app_colors.dart';
+import 'package:craveai/generated/app_colors.dart';
 import 'package:craveai/views/screens/discover/discover_screen.dart';
 import 'package:craveai/views/screens/home/home_screen.dart';
 import 'package:craveai/views/screens/profile/profile_screen.dart';

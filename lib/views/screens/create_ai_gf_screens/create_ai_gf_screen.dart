@@ -1,6 +1,6 @@
 import 'dart:ui';
 
-import 'package:craveai/controllers/app_colors.dart';
+import 'package:craveai/generated/app_colors.dart';
 import 'package:craveai/generated/assets.dart';
 import 'package:craveai/views/screens/Subscription_Screens/complete_your%20_purchase_screen.dart';
 import 'package:craveai/views/screens/create_ai_gf_screens/widgets/advanced_settings_widget.dart';
