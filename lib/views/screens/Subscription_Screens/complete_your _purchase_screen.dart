@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:craveai/controllers/app_colors.dart';
+import 'package:craveai/views/screens/help_support_screen.dart';
 import 'package:craveai/views/widgets/my_button.dart';
 import 'package:craveai/views/widgets/my_text.dart';
 import 'package:flutter/material.dart';
@@ -165,7 +166,7 @@ class _CompleteYourPurchaseScreenState
                 const SizedBox(height: 20),
                 Divider(color: AppColors.primary.withValues(alpha: 0.2)),
                 const SizedBox(height: 20),
-                MyText(text: "Choose Payment Method", size: 12),
+                MyText(text: "Choose Payment Method", size: 18),
                 const SizedBox(height: 12),
 
                 ...List.generate(paymentMethod.length, (index) {
@@ -317,7 +318,7 @@ class _CompleteYourPurchaseScreenState
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
-                      Icons.add_card_sharp,
+                      Icons.payment,
                       size: 12,
                       color: AppColors.primary.withValues(alpha: 0.08),
                     ),
@@ -341,8 +342,11 @@ class _CompleteYourPurchaseScreenState
                     const SizedBox(width: 4),
                     MyText(
                       text: "Contact Support",
-                      size: 12,
+                      size: 14,
                       color: AppColors.secondary,
+                      onTap: () {
+                        Get.to(() => HelpSupportScreen());
+                      },
                     ),
                   ],
                 ),
