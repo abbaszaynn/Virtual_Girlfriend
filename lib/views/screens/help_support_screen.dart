@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:craveai/controllers/app_colors.dart';
+import 'package:craveai/views/screens/terms_condition_screens/terms_conditions_screen.dart';
 import 'package:craveai/views/widgets/my_button.dart';
 import 'package:craveai/views/widgets/my_text.dart';
 import 'package:craveai/views/widgets/my_text_field.dart';
@@ -91,7 +92,12 @@ class HelpSupportScreen extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    MyText(text: " Terms & Conditions"),
+                    MyText(
+                      text: " Terms & Conditions",
+                      onTap: () {
+                        Get.to(() => TermsConditionsScreen());
+                      },
+                    ),
                     const SizedBox(width: 20),
                     MyText(text: "Privacy Policy"),
                   ],
