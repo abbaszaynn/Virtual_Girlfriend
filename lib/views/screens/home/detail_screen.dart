@@ -36,24 +36,17 @@ class DetailScreen extends StatelessWidget {
                   right: 16,
                   bottom: 10,
                 ),
-                child: InkWell(
-                  onTap: () {
-                    Get.back();
-                  },
-                  child: Container(
-                    height: 50,
-                    width: 50,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.grey.withValues(alpha: 0.3),
+                child: Row(
+                  children: [
+                    InkWell(
+                      onTap: () {
+                        Get.back();
+                      },
+                      child: Icon(Icons.arrow_back, color: AppColors.onPrimary),
                     ),
-                    child: Center(
-                      child: const Icon(
-                        Icons.arrow_back_ios_new_rounded,
-                        color: AppColors.onPrimary,
-                      ),
-                    ),
-                  ),
+                    const SizedBox(width: 16),
+                    MyText(text: "Back", size: 16),
+                  ],
                 ),
               ),
               Padding(
