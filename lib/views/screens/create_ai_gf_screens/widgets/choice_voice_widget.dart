@@ -1,39 +1,38 @@
 import 'dart:ui';
-
-import 'package:craveai/generated/app_colors.dart';
-import 'package:craveai/views/widgets/my_text.dart';
+import 'package:kraveai/controllers/create_ai_gf_controller.dart';
+import 'package:kraveai/generated/app_colors.dart';
+import 'package:kraveai/views/widgets/my_text.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
-class ChoiceVoiceWidget extends StatefulWidget {
-  const ChoiceVoiceWidget({super.key});
+class ChoiceVoiceWidget extends StatelessWidget {
+  ChoiceVoiceWidget({super.key});
 
-  @override
-  State<ChoiceVoiceWidget> createState() => _ChoiceVoiceWidgetState();
-}
-
-class _ChoiceVoiceWidgetState extends State<ChoiceVoiceWidget> {
-  int selectedIndex = -1; // ✅ Track selected card
-
+  final CreateAiGfController controller = Get.find<CreateAiGfController>();
   final List<Map<String, dynamic>> voiceList = [
     {
       "icon": Icons.mic,
-      "title": "Gentle and playful",
-      "subtitle": "Confident and soothing",
+      "title": "Gentle",
+      "subtitle": "Confident",
+      "id": "gentle_voice_id",
     },
     {
       "icon": Icons.mic,
-      "title": "Soft & Cute",
-      "subtitle": "Gentle and playful",
+      "title": "Soft",
+      "subtitle": "Gentle",
+      "id": "soft_voice_id",
     },
     {
       "icon": Icons.mic,
-      "title": "Bold & Confident",
-      "subtitle": "Smooth and deep",
+      "title": "Bold",
+      "subtitle": "Smooth",
+      "id": "bold_voice_id",
     },
     {
       "icon": Icons.mic,
-      "title": "Calm & Caring",
-      "subtitle": "Soft and relaxing",
+      "title": "Calm",
+      "subtitle": "Soft",
+      "id": "calm_voice_id",
     },
   ];
 
@@ -56,20 +55,27 @@ class _ChoiceVoiceWidgetState extends State<ChoiceVoiceWidget> {
                 children: [
                   MyText(text: "Choose Voice", size: 18),
                   const SizedBox(height: 14),
-
-                  // 🔥 List of cards
-                  ...List.generate(voiceList.length, (index) {
-                    final item = voiceList[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: selectedCard(
-                        index: index,
-                        icon: item["icon"],
-                        title: item["title"],
-                        subtitle: item["subtitle"],
-                      ),
-                    );
-                  }),
+                  Obx(
+                    () => Column(
+                      children: List.generate(voiceList.length, (index) {
+                        final item = voiceList[index];
+                        // Just checking index equality for simplicity, or could check ID
+                        bool isSelected =
+                            controller.selectedVoiceId.value == item["id"];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: _selectedCard(
+                            isSelected: isSelected,
+                            icon: item["icon"],
+                            title: item["title"],
+                            subtitle: item["subtitle"],
+                            onTap: () =>
+                                controller.selectedVoiceId.value = item["id"],
+                          ),
+                        );
+                      }),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -79,20 +85,15 @@ class _ChoiceVoiceWidgetState extends State<ChoiceVoiceWidget> {
     );
   }
 
-  Widget selectedCard({
-    required int index,
+  Widget _selectedCard({
+    required bool isSelected,
     required IconData icon,
     required String title,
     required String subtitle,
+    required VoidCallback onTap,
   }) {
-    bool isSelected = selectedIndex == index;
-
     return GestureDetector(
-      onTap: () {
-        setState(() {
-          selectedIndex = index; // ✅ Select ONLY this card
-        });
-      },
+      onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
@@ -112,7 +113,6 @@ class _ChoiceVoiceWidgetState extends State<ChoiceVoiceWidget> {
               color: Colors.white.withValues(alpha: 0.03),
               child: Row(
                 children: [
-                  // 🔴 Outer Circle
                   Container(
                     height: 48,
                     width: 48,
@@ -127,10 +127,7 @@ class _ChoiceVoiceWidgetState extends State<ChoiceVoiceWidget> {
                       ),
                     ),
                   ),
-
                   const SizedBox(width: 16),
-
-                  // 🔤 Texts
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

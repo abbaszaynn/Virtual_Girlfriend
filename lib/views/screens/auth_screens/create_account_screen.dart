@@ -1,12 +1,16 @@
 import 'dart:ui';
 
-import 'package:craveai/generated/app_colors.dart';
-import 'package:craveai/generated/assets.dart';
-import 'package:craveai/views/widgets/common_image_view.dart';
-import 'package:craveai/views/widgets/my_button.dart';
-import 'package:craveai/views/widgets/my_text.dart';
-import 'package:craveai/views/widgets/my_text_field.dart';
+import 'package:kraveai/generated/app_colors.dart';
+import 'package:kraveai/generated/assets.dart';
+import 'package:kraveai/services/supabase_service.dart';
+import 'package:kraveai/views/widgets/common_image_view.dart';
+// import 'package:kraveai/views/widgets/my_button.dart'; // Removing custom button for debug
+import 'package:kraveai/views/widgets/my_text.dart';
+import 'package:kraveai/views/widgets/my_text_field.dart';
+import 'package:kraveai/views/screens/dashboard/dashboard_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class CreateAccountScreen extends StatefulWidget {
   const CreateAccountScreen({super.key});
@@ -17,6 +21,100 @@ class CreateAccountScreen extends StatefulWidget {
 
 class _CreateAccountScreenState extends State<CreateAccountScreen> {
   String selected = "option1";
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
+  final TextEditingController roleController = TextEditingController();
+
+  bool isLoading = false;
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+    confirmPasswordController.dispose();
+    roleController.dispose();
+    super.dispose();
+  }
+
+  void _showSnack(String message, {bool isError = false}) {
+    debugPrint("DEBUG SNACK: $message"); // Console log
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? Colors.red : Colors.green,
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  Future<void> _createAccount() async {
+    debugPrint("DEBUG: _createAccount called");
+    final name = nameController.text.trim();
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+    final confirmPassword = confirmPasswordController.text.trim();
+    final role = roleController.text.trim();
+
+    debugPrint("DEBUG: Inputs - Name: $name, Email: $email, Role: $role");
+
+    if (name.isEmpty ||
+        email.isEmpty ||
+        password.isEmpty ||
+        confirmPassword.isEmpty) {
+      _showSnack("Please fill in all fields", isError: true);
+      return;
+    }
+
+    if (password != confirmPassword) {
+      _showSnack("Passwords do not match", isError: true);
+      return;
+    }
+
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      debugPrint("DEBUG: Attempting Supabase SignUp...");
+
+      // Accessing client directly here to ensuring service is checked
+      final client = SupabaseService().client;
+
+      final AuthResponse res = await client.auth.signUp(
+        email: email,
+        password: password,
+        data: {'full_name': name, 'role': role},
+      );
+
+      debugPrint("DEBUG: SignUp Response User: ${res.user}");
+
+      if (res.user != null) {
+        _showSnack("Account created successfully!");
+
+        // Slight delay to let snackbar be seen? No, immediate is fine usually.
+        debugPrint("DEBUG: Navigating to CustomBottomNav");
+        Get.offAll(() => const CustomBottomNav());
+      } else {
+        _showSnack("Account creation failed (User is null)", isError: true);
+      }
+    } on AuthException catch (e) {
+      debugPrint("DEBUG: AuthException: ${e.message}");
+      _showSnack(e.message, isError: true);
+    } catch (e) {
+      debugPrint("DEBUG: Exception: $e");
+      _showSnack("An unexpected error occurred: $e", isError: true);
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,32 +164,39 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                               ),
                               const SizedBox(height: 20),
                               MyTextField(
+                                controller: nameController,
                                 label: "Name",
                                 prefix: Icon(Icons.person_outline),
                                 hint: "Your name",
                                 radius: 12,
                               ),
                               MyTextField(
+                                controller: emailController,
                                 label: "Email",
                                 prefix: Icon(Icons.email_outlined),
                                 hint: "your@email.com",
                                 radius: 12,
                               ),
                               MyTextField(
+                                controller: passwordController,
                                 label: "Password",
                                 prefix: Icon(Icons.lock_outline),
                                 hint: "Enter your password",
                                 radius: 12,
-                                suffix: Icon(Icons.visibility_off_outlined),
+                                showVisibilityToggle: true,
+                                isObSecure: true,
                               ),
                               MyTextField(
+                                controller: confirmPasswordController,
                                 label: "Confirm Password",
                                 prefix: Icon(Icons.lock_outline),
                                 hint: "Re-enter your password",
                                 radius: 12,
-                                suffix: Icon(Icons.visibility_off_outlined),
+                                showVisibilityToggle: true,
+                                isObSecure: true,
                               ),
                               MyTextField(
+                                controller: roleController,
                                 label: "Preffered Role",
                                 prefix: Icon(Icons.lock_outline),
                                 hint: "Choose how you like Maya to support",
@@ -104,11 +209,34 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                                   left: 16.0,
                                   right: 16.0,
                                 ),
-                                child: MyButton(
-                                  onTap: () {},
-                                  buttonText: "Create an account",
-                                  radius: 12,
-                                ),
+                                child: isLoading
+                                    ? Center(
+                                        child: CircularProgressIndicator(
+                                          color: AppColors.primary,
+                                        ),
+                                      )
+                                    : SizedBox(
+                                        width: double.infinity,
+                                        height: 50,
+                                        child: ElevatedButton(
+                                          onPressed: _createAccount,
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: AppColors
+                                                .secondary, // Using same color as MyButton
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                          ),
+                                          child: const Text(
+                                            "Create an account",
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
                               ),
                             ],
                           ),
@@ -175,9 +303,11 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
       children: [
         Radio<String>(
           value: value,
+          // ignore: deprecated_member_use
           groupValue: selected,
           activeColor: Colors.white,
           fillColor: WidgetStateProperty.all(AppColors.secondary),
+          // ignore: deprecated_member_use
           onChanged: (val) {
             setState(() => selected = val!);
           },

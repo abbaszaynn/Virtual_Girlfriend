@@ -1,5 +1,5 @@
 import 'dart:ui';
-import 'package:craveai/views/widgets/my_text.dart';
+import 'package:kraveai/views/widgets/my_text.dart';
 import 'package:flutter/material.dart';
 
 class CategoryCard extends StatelessWidget {
@@ -26,9 +26,9 @@ class CategoryCard extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            color: Colors.white.withOpacity(0.15),
+            color: Colors.white.withValues(alpha: 0.15),
             border: Border.all(
-              color: Colors.white.withOpacity(0.3),
+              color: Colors.white.withValues(alpha: 0.3),
               width: 1.2,
             ),
           ),

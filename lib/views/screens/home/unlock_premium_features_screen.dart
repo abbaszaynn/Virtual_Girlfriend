@@ -1,11 +1,11 @@
 import 'dart:ui';
 
-import 'package:craveai/generated/app_colors.dart';
-import 'package:craveai/generated/assets.dart';
-import 'package:craveai/views/screens/home/unlock_carve_plus_screen.dart';
-import 'package:craveai/views/widgets/common_image_view.dart';
-import 'package:craveai/views/widgets/my_button.dart';
-import 'package:craveai/views/widgets/my_text.dart';
+import 'package:kraveai/generated/app_colors.dart';
+import 'package:kraveai/generated/assets.dart';
+import 'package:kraveai/views/screens/home/unlock_carve_plus_screen.dart';
+import 'package:kraveai/views/widgets/common_image_view.dart';
+import 'package:kraveai/views/widgets/my_button.dart';
+import 'package:kraveai/views/widgets/my_text.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -57,24 +57,24 @@ class UnlockPremiumFeaturesScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 20),
 
-                              _FeaturesDot(title: "Unlimited chat"),
+                              _featuresDot(text: "Unlimited AI Chats"),
                               const SizedBox(height: 10),
 
-                              _FeaturesDot(title: "Voice messages"),
+                              _featuresDot(text: "Advanced AI Persona"),
                               const SizedBox(height: 10),
 
-                              _FeaturesDot(title: "SFW + NSFW images"),
+                              _featuresDot(text: "SFW + NSFW images"),
                               const SizedBox(height: 10),
 
-                              _FeaturesDot(
-                                title: "Full leveling (up to level 6)",
+                              _featuresDot(
+                                text: "Full leveling (up to level 6)",
                               ),
                               const SizedBox(height: 10),
 
-                              _FeaturesDot(title: "Premium gifts"),
+                              _featuresDot(text: "Zero Ads"),
                               const SizedBox(height: 10),
 
-                              _FeaturesDot(title: "Multiple models"),
+                              _featuresDot(text: "Multiple models"),
 
                               const SizedBox(height: 20),
                               Padding(
@@ -229,7 +229,7 @@ class UnlockPremiumFeaturesScreen extends StatelessWidget {
     );
   }
 
-  Widget _FeaturesDot({required String title}) {
+  Widget _featuresDot({required String text}) {
     return Row(
       children: [
         Container(
@@ -244,7 +244,7 @@ class UnlockPremiumFeaturesScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 20),
-        MyText(text: title, size: 14),
+        MyText(text: text, size: 14),
       ],
     );
   }

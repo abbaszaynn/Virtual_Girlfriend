@@ -1,8 +1,8 @@
-import 'package:craveai/generated/app_colors.dart';
-import 'package:craveai/generated/assets.dart';
-import 'package:craveai/views/screens/Subscription_Screens/manage_subscription_screen.dart';
-import 'package:craveai/views/widgets/common_image_view.dart';
-import 'package:craveai/views/widgets/my_text.dart';
+import 'package:kraveai/generated/app_colors.dart';
+import 'package:kraveai/generated/assets.dart';
+import 'package:kraveai/views/screens/Subscription_Screens/manage_subscription_screen.dart';
+import 'package:kraveai/views/widgets/common_image_view.dart';
+import 'package:kraveai/views/widgets/my_text.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -48,22 +48,22 @@ class UnlockCarvePlusScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 30),
 
-                _FeaturesDot(title: "Unlimited chat"),
+                _featuresDot(text: "Pro-Level Photo Gen"),
                 const SizedBox(height: 10),
 
-                _FeaturesDot(title: "NSFW Mode & Mature Features"),
+                _featuresDot(text: "Early Access to New Features"),
                 const SizedBox(height: 10),
 
-                _FeaturesDot(title: "Exclusive VIP Models"),
+                _featuresDot(text: "Exclusive VIP Models"),
                 const SizedBox(height: 10),
 
-                _FeaturesDot(title: "Voice Messages"),
+                _featuresDot(text: "Voice Messages"),
                 const SizedBox(height: 10),
 
-                _FeaturesDot(title: "Faster AI Responses"),
+                _featuresDot(text: "Advanced AI Persona"),
                 const SizedBox(height: 10),
 
-                _FeaturesDot(title: "Custom Personality Builder"),
+                _featuresDot(text: "Custom Personality Builder"),
                 const SizedBox(height: 30),
                 _planeContainer(
                   title: "Monthly Plan",
@@ -124,7 +124,7 @@ class UnlockCarvePlusScreen extends StatelessWidget {
     );
   }
 
-  Widget _FeaturesDot({required String title}) {
+  Widget _featuresDot({required String text}) {
     return Row(
       children: [
         Container(
@@ -139,7 +139,7 @@ class UnlockCarvePlusScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 20),
-        MyText(text: title, size: 14),
+        MyText(text: text, size: 14),
       ],
     );
   }

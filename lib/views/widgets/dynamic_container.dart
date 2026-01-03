@@ -1,5 +1,5 @@
 import 'dart:ui';
-import 'package:craveai/views/widgets/my_text.dart';
+import 'package:kraveai/views/widgets/my_text.dart';
 import 'package:flutter/material.dart';
 
 class DynamicContainer extends StatelessWidget {

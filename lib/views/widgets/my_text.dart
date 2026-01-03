@@ -1,7 +1,7 @@
 // ignore_for_file: unnecessary_string_interpolations
 
-import 'package:craveai/generated/app_colors.dart';
-import 'package:craveai/generated/app_fonts.dart';
+import 'package:kraveai/generated/app_colors.dart';
+import 'package:kraveai/generated/app_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -28,8 +28,8 @@ class MyText extends StatelessWidget {
   final double? paddingBottom;
   final double? letterSpacing;
 
-  MyText({
-    Key? key,
+  const MyText({
+    super.key,
     required this.text,
     this.size,
     this.lineHeight,
@@ -49,7 +49,7 @@ class MyText extends StatelessWidget {
     this.paddingBottom = 0,
     this.onTap,
     this.fontStyle,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

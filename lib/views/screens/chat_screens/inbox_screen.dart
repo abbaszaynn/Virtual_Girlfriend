@@ -1,12 +1,16 @@
 import 'dart:ui';
 
-import 'package:craveai/generated/app_colors.dart';
-import 'package:craveai/generated/assets.dart';
-import 'package:craveai/views/screens/chat_screens/widgtes/inbox_card_widget.dart';
-import 'package:craveai/views/widgets/common_image_view.dart';
-import 'package:craveai/views/widgets/my_text.dart';
-import 'package:craveai/views/widgets/my_text_field.dart';
+import 'package:kraveai/generated/app_colors.dart';
+
+import 'package:kraveai/views/screens/chat_screens/chat_screen.dart';
+import 'package:kraveai/services/supabase_service.dart';
+import 'package:kraveai/views/screens/chat_screens/widgtes/inbox_card_widget.dart';
+import 'package:kraveai/views/widgets/common_image_view.dart';
+import 'package:kraveai/views/widgets/my_text.dart';
+import 'package:kraveai/views/widgets/my_text_field.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:kraveai/data/character_data.dart';
 
 class InboxScreen extends StatelessWidget {
   const InboxScreen({super.key});
@@ -72,38 +76,14 @@ class InboxScreen extends StatelessWidget {
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   spacing: 20,
-                  children: [
-                    CommonImageView(
-                      imagePath: Assets.maya,
+                  children: characterList.map((char) {
+                    return CommonImageView(
+                      imagePath: char.imagePath,
                       height: 60,
                       width: 60,
                       radius: 30,
-                    ),
-                    CommonImageView(
-                      imagePath: Assets.maya,
-                      height: 60,
-                      width: 60,
-                      radius: 30,
-                    ),
-                    CommonImageView(
-                      imagePath: Assets.maya,
-                      height: 60,
-                      width: 60,
-                      radius: 30,
-                    ),
-                    CommonImageView(
-                      imagePath: Assets.maya,
-                      height: 60,
-                      width: 60,
-                      radius: 30,
-                    ),
-                    CommonImageView(
-                      imagePath: Assets.maya,
-                      height: 60,
-                      width: 60,
-                      radius: 30,
-                    ),
-                  ],
+                    );
+                  }).toList(),
                 ),
               ),
               const SizedBox(height: 20),
@@ -119,13 +99,31 @@ class InboxScreen extends StatelessWidget {
               Expanded(
                 child: ListView.builder(
                   padding: const EdgeInsets.all(0),
-                  itemCount: 10,
+                  itemCount: characterList.length,
                   itemBuilder: (context, index) {
-                    return InboxCard(
-                      name: "Maya",
-                      message: "Hi there!",
-                      time: "19:00",
-                      image: Assets.maya,
+                    final character = characterList[index];
+                    return GestureDetector(
+                      onTap: () async {
+                        try {
+                          final String charId = await SupabaseService()
+                              .getOrCreateCharacter(character);
+                          Get.to(
+                            () => ChatScreen(
+                              characterId: charId,
+                              name: character.name,
+                              image: character.imagePath,
+                            ),
+                          );
+                        } catch (e) {
+                          Get.snackbar("Error", "Failed to open chat: $e");
+                        }
+                      },
+                      child: InboxCard(
+                        name: character.name,
+                        message: "Hey! What are you up to? 😉",
+                        time: "Now",
+                        image: character.imagePath,
+                      ),
                     );
                   },
                 ),

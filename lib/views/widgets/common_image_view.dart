@@ -1,23 +1,23 @@
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:craveai/generated/app_colors.dart';
+import 'package:kraveai/generated/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_svg/svg.dart';
 
 class CommonImageView extends StatelessWidget {
-  // ignore_for_file: must_be_immutable
-  String? url;
-  String? imagePath;
-  String? svgPath;
-  File? file;
-  double? height;
-  double? width;
-  double? radius;
+  // ignore: must_be_immutable
+  final String? url;
+  final String? imagePath;
+  final String? svgPath;
+  final File? file;
+  final double? height;
+  final double? width;
+  final double? radius;
   final BoxFit fit;
   final String placeHolder;
 
-  CommonImageView({
+  const CommonImageView({
     super.key,
     this.url,
     this.imagePath,
@@ -39,7 +39,7 @@ class CommonImageView extends StatelessWidget {
     if (svgPath != null && svgPath!.isNotEmpty) {
       return Animate(
         effects: [FadeEffect(duration: Duration(milliseconds: 500))],
-        child: Container(
+        child: SizedBox(
           height: height,
           width: width,
           child: ClipRRect(
@@ -71,7 +71,7 @@ class CommonImageView extends StatelessWidget {
             width: width,
             fit: fit,
             imageUrl: url!,
-            placeholder: (context, url) => Container(
+            placeholder: (context, url) => SizedBox(
               height: 23,
               width: 23,
               child: Center(
@@ -113,17 +113,18 @@ class CommonImageView extends StatelessWidget {
 }
 
 class CommonImageViewWithBorder extends StatelessWidget {
-  String? url;
-  String? imagePath;
-  String? svgPath;
-  File? file;
-  double? height;
-  double? width;
-  double? radius;
+  final String? url;
+  final String? imagePath;
+  final String? svgPath;
+  final File? file;
+  final double? height;
+  final double? width;
+  final double? radius;
   final BoxFit fit;
   final String placeHolder;
 
-  CommonImageViewWithBorder({
+  const CommonImageViewWithBorder({
+    super.key,
     this.url,
     this.imagePath,
     this.svgPath,
@@ -142,7 +143,7 @@ class CommonImageViewWithBorder extends StatelessWidget {
 
   Widget _buildImageView() {
     if (svgPath != null && svgPath!.isNotEmpty) {
-      return Container(
+      return SizedBox(
         height: height,
         width: width,
         child: ClipRRect(
@@ -168,7 +169,7 @@ class CommonImageViewWithBorder extends StatelessWidget {
           width: width,
           fit: fit,
           imageUrl: url!,
-          placeholder: (context, url) => Container(
+          placeholder: (context, url) => SizedBox(
             height: 23,
             width: 23,
             child: Center(

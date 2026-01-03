@@ -1,9 +1,9 @@
 import 'dart:ui';
-import 'package:craveai/generated/app_colors.dart';
-import 'package:craveai/views/screens/discover/discover_screen.dart';
-import 'package:craveai/views/screens/home/home_screen.dart';
-import 'package:craveai/views/screens/profile/profile_screen.dart';
-import 'package:craveai/views/screens/setting/setting_screen.dart';
+import 'package:kraveai/generated/app_colors.dart';
+import 'package:kraveai/views/screens/discover/discover_screen.dart';
+import 'package:kraveai/views/screens/home/home_screen.dart';
+import 'package:kraveai/views/screens/profile/profile_screen.dart';
+import 'package:kraveai/views/screens/setting/setting_screen.dart';
 import 'package:flutter/material.dart';
 
 // Import your screens

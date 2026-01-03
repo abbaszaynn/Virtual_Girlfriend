@@ -1,25 +1,25 @@
 import 'dart:ui';
 
-import 'package:craveai/generated/app_colors.dart';
-import 'package:craveai/generated/app_fonts.dart';
-import 'package:craveai/views/widgets/my_text.dart';
+import 'package:kraveai/generated/app_colors.dart';
+import 'package:kraveai/generated/app_fonts.dart';
+import 'package:kraveai/views/widgets/my_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:get/get_connect/http/src/utils/utils.dart';
 import 'package:get/get_utils/src/extensions/internacionalization.dart';
 
 class MyTextField extends StatefulWidget {
-  String? label, hint;
-  TextEditingController? controller;
-  ValueChanged<String>? onChanged;
-  bool? isObSecure, haveLabel, isReadOnly;
-  double? marginBottom, radius;
-  int? maxLines;
-  double? labelSize, hintsize;
-  FocusNode? focusNode;
-  Color? filledColor, focusedFillColor, hintColor, labelColor;
-  Widget? prefix, suffix;
-  FontWeight? labelWeight, hintWeight;
+  final String? label, hint;
+  final TextEditingController? controller;
+  final ValueChanged<String>? onChanged;
+  final bool? isObSecure, haveLabel, isReadOnly;
+  final double? marginBottom, radius;
+  final int? maxLines;
+  final double? labelSize, hintsize;
+  final FocusNode? focusNode;
+  final Color? filledColor, focusedFillColor, hintColor, labelColor;
+  final Widget? prefix, suffix;
+  final FontWeight? labelWeight, hintWeight;
   final VoidCallback? onTap;
   final TextInputType? keyboardType;
   final double? height;
@@ -27,7 +27,7 @@ class MyTextField extends StatefulWidget {
   final FormFieldValidator<String>? validator;
   final bool? showVisibilityToggle; // NEW: show/hide password icon
 
-  MyTextField({
+  const MyTextField({
     super.key,
     this.controller,
     this.hint,
@@ -63,25 +63,16 @@ class MyTextField extends StatefulWidget {
 }
 
 class _MyTextFieldState extends State<MyTextField> {
-  bool _isFocused = false;
   bool _obscureText = false; // NEW: for password visibility
 
   @override
   void initState() {
     super.initState();
-    widget.focusNode?.addListener(_onFocusChange);
     _obscureText = widget.isObSecure ?? false; // NEW: initialize
-  }
-
-  void _onFocusChange() {
-    setState(() {
-      _isFocused = widget.focusNode?.hasFocus ?? false;
-    });
   }
 
   @override
   void dispose() {
-    widget.focusNode?.removeListener(_onFocusChange);
     super.dispose();
   }
 

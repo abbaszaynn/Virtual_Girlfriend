@@ -1,12 +1,16 @@
 import 'dart:ui';
-import 'package:craveai/generated/app_colors.dart';
-import 'package:craveai/generated/assets.dart';
-import 'package:craveai/views/widgets/my_text.dart';
+import 'package:kraveai/generated/app_colors.dart';
+import 'package:kraveai/generated/assets.dart';
+import 'package:kraveai/views/widgets/my_text.dart';
 import 'package:flutter/material.dart';
 
 class SingleCard extends StatelessWidget {
   final VoidCallback? onTap;
-  const SingleCard({super.key, this.onTap});
+  final String? image;
+  final String? name;
+  final String? age;
+
+  const SingleCard({super.key, this.onTap, this.image, this.name, this.age});
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +22,7 @@ class SingleCard extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           image: DecorationImage(
-            image: AssetImage(Assets.maya),
+            image: AssetImage(image ?? Assets.maya),
             fit: BoxFit.cover,
           ),
         ),
@@ -33,15 +37,15 @@ class SingleCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        Colors.white.withOpacity(0.15),
-                        Colors.black.withOpacity(0.6),
+                        Colors.white.withValues(alpha: 0.15),
+                        Colors.black.withValues(alpha: 0.6),
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: Colors.white.withOpacity(0.25),
+                      color: Colors.white.withValues(alpha: 0.2),
                       width: 1.2,
                     ),
                   ),
@@ -58,9 +62,13 @@ class SingleCard extends StatelessWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        MyText(text: "Maya", size: 20, weight: FontWeight.bold),
                         MyText(
-                          text: "23",
+                          text: name ?? "Maya",
+                          size: 20,
+                          weight: FontWeight.bold,
+                        ),
+                        MyText(
+                          text: age ?? "23",
                           size: 16,
                           weight: FontWeight.w500,
                           color: Colors.white70,
@@ -78,15 +86,15 @@ class SingleCard extends StatelessWidget {
                           height: 30,
                           width: 150,
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.20),
+                            color: Colors.white.withValues(alpha: 0.20),
                             borderRadius: BorderRadius.circular(15),
                             border: Border.all(
-                              color: Colors.white.withOpacity(0.3),
+                              color: Colors.white.withValues(alpha: 0.2),
                               width: 1,
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black26.withOpacity(0.15),
+                                color: Colors.black.withValues(alpha: 0.5),
                                 blurRadius: 6,
                                 offset: Offset(0, 3),
                               ),

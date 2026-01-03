@@ -1,10 +1,10 @@
 import 'dart:ui';
 
-import 'package:craveai/generated/app_colors.dart';
-import 'package:craveai/generated/assets.dart';
-import 'package:craveai/views/screens/home/unlock_register_screen.dart';
-import 'package:craveai/views/widgets/my_button.dart';
-import 'package:craveai/views/widgets/my_text.dart';
+import 'package:kraveai/generated/app_colors.dart';
+import 'package:kraveai/generated/assets.dart';
+import 'package:kraveai/views/screens/home/unlock_register_screen.dart';
+import 'package:kraveai/views/widgets/my_button.dart';
+import 'package:kraveai/views/widgets/my_text.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 

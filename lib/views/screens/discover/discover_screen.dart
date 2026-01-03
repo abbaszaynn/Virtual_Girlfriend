@@ -1,8 +1,9 @@
-import 'package:craveai/generated/assets.dart';
-import 'package:craveai/views/screens/home/detail_screen.dart';
-import 'package:craveai/views/widgets/home_card.dart';
-import 'package:craveai/views/widgets/my_text.dart';
-import 'package:craveai/views/widgets/my_text_field.dart';
+import 'package:kraveai/data/character_data.dart';
+import 'package:kraveai/models/character_model.dart';
+import 'package:kraveai/views/screens/home/detail_screen.dart';
+import 'package:kraveai/views/widgets/home_card.dart';
+import 'package:kraveai/views/widgets/my_text.dart';
+import 'package:kraveai/views/widgets/my_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -33,111 +34,27 @@ class DiscoverScreen extends StatelessWidget {
                   prefix: Icon(Icons.search),
                 ),
                 const SizedBox(height: 20),
-                GridView.count(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 15,
-                  mainAxisSpacing: 15,
-                  childAspectRatio: 0.9,
+                GridView.builder(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 15,
+                    mainAxisSpacing: 15,
+                    childAspectRatio: 0.9,
+                  ),
+                  itemCount: characterList.length,
                   shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                  children: [
-                    HomeCard(
-                      image: Assets.maya,
-                      title: "Flirty",
-                      age: "25",
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemBuilder: (context, index) {
+                    final Character character = characterList[index];
+                    return HomeCard(
+                      image: character.imagePath,
+                      title: character.name,
+                      age: character.age,
                       ontap: () {
-                        Get.to(() => DetailScreen());
+                        Get.to(() => DetailScreen(character: character));
                       },
-                    ),
-                    HomeCard(
-                      image: Assets.maya,
-                      title: "Romantic",
-                      age: "30",
-                      ontap: () {
-                        Get.to(() => DetailScreen());
-                      },
-                    ),
-                    HomeCard(
-                      image: Assets.maya,
-                      title: "Chill",
-                      age: "22",
-                      ontap: () {
-                        Get.to(() => DetailScreen());
-                      },
-                    ),
-                    HomeCard(
-                      image: Assets.maya,
-                      title: "Adventurous",
-                      age: "28",
-                      ontap: () {
-                        Get.to(() => DetailScreen());
-                      },
-                    ),
-                    HomeCard(
-                      image: Assets.maya,
-                      title: "Flirty",
-                      age: "25",
-                      ontap: () {
-                        Get.to(() => DetailScreen());
-                      },
-                    ),
-                    HomeCard(
-                      image: Assets.maya,
-                      title: "Romantic",
-                      age: "30",
-                      ontap: () {
-                        Get.to(() => DetailScreen());
-                      },
-                    ),
-                    HomeCard(
-                      image: Assets.maya,
-                      title: "Chill",
-                      age: "22",
-                      ontap: () {
-                        Get.to(() => DetailScreen());
-                      },
-                    ),
-                    HomeCard(
-                      image: Assets.maya,
-                      title: "Adventurous",
-                      age: "28",
-                      ontap: () {
-                        Get.to(() => DetailScreen());
-                      },
-                    ),
-                    HomeCard(
-                      image: Assets.maya,
-                      title: "Flirty",
-                      age: "25",
-                      ontap: () {
-                        Get.to(() => DetailScreen());
-                      },
-                    ),
-                    HomeCard(
-                      image: Assets.maya,
-                      title: "Romantic",
-                      age: "30",
-                      ontap: () {
-                        Get.to(() => DetailScreen());
-                      },
-                    ),
-                    HomeCard(
-                      image: Assets.maya,
-                      title: "Chill",
-                      age: "22",
-                      ontap: () {
-                        Get.to(() => DetailScreen());
-                      },
-                    ),
-                    HomeCard(
-                      image: Assets.maya,
-                      title: "Adventurous",
-                      age: "28",
-                      ontap: () {
-                        Get.to(() => DetailScreen());
-                      },
-                    ),
-                  ],
+                    );
+                  },
                 ),
               ],
             ),

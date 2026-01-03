@@ -1,8 +1,8 @@
 import 'dart:ui';
-import 'package:craveai/generated/app_colors.dart';
-import 'package:craveai/generated/assets.dart';
-import 'package:craveai/views/widgets/common_image_view.dart';
-import 'package:craveai/views/widgets/my_text.dart';
+import 'package:kraveai/generated/app_colors.dart';
+import 'package:kraveai/generated/assets.dart';
+import 'package:kraveai/views/widgets/common_image_view.dart';
+import 'package:kraveai/views/widgets/my_text.dart';
 import 'package:flutter/material.dart';
 
 class HomeCard extends StatelessWidget {
@@ -25,7 +25,10 @@ class HomeCard extends StatelessWidget {
       onTap: ontap,
       child: Container(
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.white.withOpacity(0.25), width: 1.2),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.25),
+            width: 1.2,
+          ),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
@@ -66,10 +69,10 @@ class HomeCard extends StatelessWidget {
                             height: 40,
                             width: 40,
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.15),
+                              color: Colors.white.withValues(alpha: 0.15),
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: Colors.white.withOpacity(0.25),
+                                color: Colors.white.withValues(alpha: 0.2),
                                 width: 1.2,
                               ),
                             ),
@@ -117,8 +120,8 @@ class HomeCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        Colors.white.withOpacity(0.1),
-                        AppColors.secondary.withOpacity(0.12),
+                        Colors.white.withValues(alpha: 0.1),
+                        AppColors.secondary.withValues(alpha: 0.12),
                       ],
                       begin: Alignment.centerLeft,
                       end: Alignment.centerRight,
@@ -127,7 +130,7 @@ class HomeCard extends StatelessWidget {
                     // Optional subtle shadow for depth
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withValues(alpha: 0.8),
                         blurRadius: 4,
                         offset: const Offset(0, 2),
                       ),

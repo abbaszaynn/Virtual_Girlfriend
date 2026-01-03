@@ -1,6 +1,6 @@
-import 'package:craveai/generated/app_colors.dart';
-import 'package:craveai/views/screens/terms_condition_screens/widgets/faqs_widget.dart';
-import 'package:craveai/views/widgets/my_text.dart';
+import 'package:kraveai/generated/app_colors.dart';
+import 'package:kraveai/views/screens/terms_condition_screens/widgets/faqs_widget.dart';
+import 'package:kraveai/views/widgets/my_text.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 

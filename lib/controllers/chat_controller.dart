@@ -1,0 +1,486 @@
+// import 'package:kraveai/services/elevenlabs_service.dart';
+import 'package:kraveai/services/bytez_audio_service.dart';
+import 'package:just_audio/just_audio.dart';
+import 'dart:io';
+import 'package:kraveai/services/supabase_service.dart';
+import 'package:kraveai/services/openrouter_service.dart';
+import 'package:kraveai/services/bytez_image_service.dart';
+// import 'package:kraveai/services/replicate_service.dart';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class ChatController extends GetxController {
+  final SupabaseClient client = SupabaseService().client;
+
+  // Observables
+  final messages = <Map<String, dynamic>>[].obs;
+  final isLoading = false.obs;
+  final isSending = false.obs;
+  final isImageGenerating = false.obs; // New observable
+
+  // Image Generation
+  final RxInt freeImageCount = 0.obs;
+  final int maxFreeImages = 5;
+  late SharedPreferences _prefs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    _initPrefs();
+  }
+
+  Future<void> _initPrefs() async {
+    _prefs = await SharedPreferences.getInstance();
+    freeImageCount.value = _prefs.getInt('free_image_count') ?? 0;
+  }
+
+  // Audio
+  final AudioPlayer audioPlayer = AudioPlayer(); // Audio Player instance
+  final RxString playingMessageId = "".obs; // Track which message is playing
+  final isAudioLoading = false.obs;
+  String? voiceId; // Store voice ID
+
+  // Controllers
+  final TextEditingController textController = TextEditingController();
+  final ScrollController scrollController = ScrollController();
+
+  final OpenRouterService _aiService = OpenRouterService();
+  final BytezAudioService _audioService = BytezAudioService(); // Audio Service
+  // final ElevenLabsService _audioService = ElevenLabsService();
+
+  late String conversationId;
+  late String characterId;
+  String? characterName;
+  String? characterImage;
+  String systemPrompt = "";
+
+  @override
+  void onClose() {
+    audioPlayer.dispose();
+    super.onClose();
+  }
+
+  void initializeRequest(String charId, String charName, String charImg) {
+    characterId = charId;
+    characterName = charName;
+    characterImage = charImg;
+    _getOrCreateConversation();
+  }
+
+  Future<void> _getOrCreateConversation() async {
+    isLoading.value = true;
+    try {
+      final userId = client.auth.currentUser!.id;
+      debugPrint("DEBUG: Current User ID: $userId");
+      debugPrint("DEBUG: Target Character ID: $characterId");
+
+      // 0. Fetch Character System Prompt AND Voice ID
+      final charData = await client
+          .from('characters')
+          .select('system_prompt, voice_id')
+          .eq('id', characterId)
+          .single();
+      systemPrompt = charData['system_prompt'] ?? "You are a helpful AI.";
+      voiceId = charData['voice_id']; // Store voice ID
+      // Hotfix: If DB still has old 'default_voice_id', fallback to Rachel
+      if (voiceId == 'default_voice_id') {
+        debugPrint(
+          "DEBUG: Found invalid 'default_voice_id', swapping for Rachel.",
+        );
+        voiceId = '21m00Tcm4TlvDq8ikWAM';
+      }
+      debugPrint("DEBUG: Loaded System Prompt. Voice ID: $voiceId");
+
+      // ... existing conversation logic ...
+      final data = await client
+          .from('conversations')
+          .select()
+          .eq('driver_user_id', userId)
+          .eq('match_character_id', characterId)
+          .maybeSingle();
+
+      if (data != null) {
+        conversationId = data['id'];
+        debugPrint("DEBUG: Found existing conversation: $conversationId");
+      } else {
+        // 2. Create new conversation
+        debugPrint("DEBUG: Creating new conversation...");
+        final newConv = await client
+            .from('conversations')
+            .insert({
+              'driver_user_id': userId,
+              'match_character_id': characterId,
+              'last_message': 'Started a new chat',
+            })
+            .select()
+            .single();
+        conversationId = newConv['id'];
+        debugPrint("DEBUG: Created conversation: $conversationId");
+      }
+
+      // 3. Load Messages
+      await _loadMessages();
+
+      // 4. Subscribe to Realtime
+      _subscribeToMessages();
+    } catch (e) {
+      debugPrint("DEBUG ERROR: Failed to init chat: $e");
+      _showError('Failed to load chat: $e');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // ... _loadMessages, _subscribeToMessages, sendMessage ...
+
+  // Audio Playback Method
+  Future<void> playMessageAudio(String messageId, String text) async {
+    // if (voiceId == null || voiceId!.isEmpty) {
+    //   _showError("No voice configured for this character");
+    //   return;
+    // }
+
+    // Toggle off if already playing this message
+    if (playingMessageId.value == messageId && audioPlayer.playing) {
+      await audioPlayer.stop();
+      playingMessageId.value = "";
+      return;
+    }
+
+    try {
+      isAudioLoading.value = true;
+      playingMessageId.value = messageId; // Set current playing ID
+
+      debugPrint("DEBUG: Generating audio for: $text");
+      final File? audioFile = await _audioService.generateAudio(text);
+      // text: text,
+      // voiceId: voiceId!,
+      // );
+
+      if (audioFile != null) {
+        await audioPlayer.setFilePath(audioFile.path);
+        await audioPlayer.play();
+
+        // Reset when finished
+        audioPlayer.playerStateStream.listen((state) {
+          if (state.processingState == ProcessingState.completed) {
+            playingMessageId.value = "";
+          }
+        });
+      } else {
+        _showError("Failed to generate audio");
+        playingMessageId.value = "";
+      }
+    } catch (e) {
+      debugPrint("Audio Playback Error: $e");
+      _showError("Audio error: $e");
+      playingMessageId.value = "";
+    } finally {
+      isAudioLoading.value = false;
+    }
+  }
+
+  // ... (Keep existing _loadMessages, _subscribeToMessages, sendMessage, _performSupabaseOperation, _scrollToBottom methods but ensure they are inside the class)
+
+  Future<void> _loadMessages() async {
+    debugPrint("DEBUG: Loading messages for conversation $conversationId");
+    final response = await client
+        .from('messages')
+        .select()
+        .eq('conversation_id', conversationId)
+        .order('created_at', ascending: true);
+
+    debugPrint("DEBUG: Loaded ${response.length} messages");
+    messages.assignAll(List<Map<String, dynamic>>.from(response));
+    _scrollToBottom();
+  }
+
+  void _subscribeToMessages() {
+    debugPrint("DEBUG: Subscribing to messages...");
+    client
+        .from('messages')
+        .stream(primaryKey: ['id'])
+        .eq('conversation_id', conversationId)
+        .order('created_at')
+        .listen((List<Map<String, dynamic>> data) {
+          debugPrint(
+            "DEBUG: Realtime update received! ${data.length} messages.",
+          );
+          // Merge or replace
+          messages.assignAll(data);
+          _scrollToBottom();
+        });
+  }
+
+  Future<void> sendMessage() async {
+    final text = textController.text.trim();
+    if (text.isEmpty) return;
+
+    // 0. CHECK LIMIT
+    if (messages.length >= 10) {
+      Get.dialog(
+        AlertDialog(
+          backgroundColor: const Color(0xFF1A1A1A),
+          title: const Text(
+            "Limit Reached",
+            style: TextStyle(color: Colors.white),
+          ),
+          content: const Text(
+            "You have reached the free limit of 10 messages. Please subscribe to continue chatting with Maya.",
+            style: TextStyle(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Get.back(),
+              child: const Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () {
+                Get.back();
+                Get.snackbar(
+                  "Coming Soon",
+                  "Subscription flow will be added soon!",
+                );
+              },
+              child: const Text(
+                "Subscribe",
+                style: TextStyle(color: Colors.red),
+              ),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    debugPrint("DEBUG: Sending message: $text");
+    textController.clear();
+    isSending.value = true;
+
+    // 1. Optimistic User Update
+    final tempUserMsgId = 'temp-user-${DateTime.now().millisecondsSinceEpoch}';
+    final tempUserMessage = {
+      'id': tempUserMsgId,
+      'conversation_id': conversationId,
+      'sender_type': 'user',
+      'content': text,
+      'created_at': DateTime.now().toIso8601String(),
+    };
+    messages.add(tempUserMessage);
+    _scrollToBottom();
+
+    try {
+      // 2. Insert User Message to DB (Retry Wrapper)
+      await _performSupabaseOperation(() async {
+        await client.from('messages').insert({
+          'conversation_id': conversationId,
+          'sender_type': 'user',
+          'content': text,
+        }).select();
+      });
+
+      // 3. Get AI Response
+      final responseText = await _aiService.getChatCompletion(
+        userMessage: text,
+        systemPrompt: systemPrompt,
+        history: messages,
+      );
+
+      if (responseText != null) {
+        debugPrint("DEBUG: AI Response: $responseText");
+
+        // 4. Optimistic AI Update (Show immediately)
+        final tempAiMsgId = 'temp-ai-${DateTime.now().millisecondsSinceEpoch}';
+        final tempAiMessage = {
+          'id': tempAiMsgId,
+          'conversation_id': conversationId,
+          'sender_type': 'character',
+          'content': responseText,
+          'created_at': DateTime.now().toIso8601String(),
+        };
+        messages.add(tempAiMessage);
+        _scrollToBottom();
+
+        // 5. Background AI Save (Fire & Forget)
+        // We don't await this to keep UI responsive, but we catch errors.
+        _performSupabaseOperation(() async {
+          await client.from('messages').insert({
+            'conversation_id': conversationId,
+            'sender_type': 'character',
+            'content': responseText,
+          });
+
+          // 6. Update Conversation Last Message
+          await client
+              .from('conversations')
+              .update({
+                'last_message': responseText,
+                'last_message_at': DateTime.now().toIso8601String(),
+              })
+              .eq('id', conversationId);
+        }).catchError((e) {
+          debugPrint("DEBUG ERROR: Background AI save failed: $e");
+        });
+      }
+    } catch (e) {
+      debugPrint("DEBUG ERROR: Send failed: $e");
+      // Remove temp message if failed
+      messages.removeWhere((m) => m['id'] == tempUserMsgId);
+
+      // Safe Snackbar
+      _showError('Failed to send. Please check your connection.');
+    } finally {
+      isSending.value = false;
+    }
+  }
+
+  Future<void> _performSupabaseOperation(
+    Future<void> Function() operation,
+  ) async {
+    int retryCount = 0;
+    const maxRetries = 3;
+    while (retryCount < maxRetries) {
+      try {
+        await operation();
+        return;
+      } catch (e) {
+        debugPrint("Supabase op failed (attempt ${retryCount + 1}): $e");
+        retryCount++;
+        if (retryCount >= maxRetries) rethrow;
+        await Future.delayed(const Duration(milliseconds: 500));
+      }
+    }
+  }
+
+  // Helper for safe UI updates
+  void _showError(String message) {
+    if (Get.context != null) {
+      Get.snackbar(
+        'Error',
+        message,
+        colorText: Colors.white,
+        backgroundColor: Colors.red,
+        snackPosition: SnackPosition.BOTTOM,
+        margin: const EdgeInsets.all(10),
+      );
+    } else {
+      debugPrint("Supressed Snackbar (No Context): $message");
+      // Fallback: Could use a global key if strictly required,
+      // but usually debugPrint is enough for background errors.
+    }
+  }
+
+  // Image Generation Method
+  Future<void> requestImage() async {
+    // 1. Check Free Limit
+    if (freeImageCount.value >= maxFreeImages) {
+      // Show Subscription Dialog
+      Get.dialog(
+        AlertDialog(
+          backgroundColor: const Color(0xFF1A1A1A),
+          title: const Text(
+            "Limit Reached",
+            style: TextStyle(color: Colors.white),
+          ),
+          content: const Text(
+            "You've used your 5 free photos! Subscribe to unveil clear photos and get unlimited access.",
+            style: TextStyle(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Get.back(),
+              child: const Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () {
+                Get.back();
+                Get.snackbar(
+                  "Coming Soon",
+                  "Subscription flow will be added soon!",
+                );
+              },
+              child: const Text(
+                "Subscribe",
+                style: TextStyle(color: Colors.red),
+              ),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    isImageGenerating.value = true;
+
+    // 2. Generate Prompt based on context
+    final imagePrompt =
+        "selfie of ${characterName ?? 'a beautiful girl'}, ${characterImage ?? ''}, lying in bed or posing cute, looking at camera, high quality, photorealistic, 8k";
+
+    try {
+      // 3. Optimistic "Generating..." Message
+      final tempId = 'temp-img-${DateTime.now().millisecondsSinceEpoch}';
+      final tempMsg = {
+        'id': tempId,
+        'conversation_id': conversationId,
+        'sender_type': 'image', // Special type
+        'content': 'Generating photo...',
+        'created_at': DateTime.now().toIso8601String(),
+        'is_loading': true, // Local flag
+      };
+      messages.add(tempMsg);
+      _scrollToBottom();
+
+      // 4. Call Service
+      final imageUrl = await BytezImageService().generateImage(imagePrompt);
+      // final imageUrl = await ReplicateService().generateImage(imagePrompt);
+
+      // Remove temp
+      messages.removeWhere((m) => m['id'] == tempId);
+
+      if (imageUrl != null) {
+        // 5. Success! Save to DB
+        await _performSupabaseOperation(() async {
+          await client.from('messages').insert({
+            'conversation_id': conversationId,
+            'sender_type': 'image', // Vital for UI
+            'content': imageUrl,
+          });
+        });
+
+        // 6. Increment Count
+        freeImageCount.value++;
+        await _prefs.setInt('free_image_count', freeImageCount.value);
+
+        // 7. Add to local list immediately
+        messages.add({
+          'conversation_id': conversationId,
+          'sender_type': 'image',
+          'content': imageUrl,
+          'created_at': DateTime.now().toIso8601String(),
+        });
+        _scrollToBottom();
+      } else {
+        _showError("Failed to generate image. Please try again.");
+      }
+    } catch (e) {
+      debugPrint("Image Gen Error: $e");
+      _showError("Could not generate image");
+    } finally {
+      isImageGenerating.value = false;
+    }
+  }
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (scrollController.hasClients) {
+        scrollController.animateTo(
+          scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+}

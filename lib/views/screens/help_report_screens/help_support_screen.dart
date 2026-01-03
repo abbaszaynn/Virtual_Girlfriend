@@ -1,11 +1,11 @@
 import 'dart:ui';
 
-import 'package:craveai/generated/app_colors.dart';
-import 'package:craveai/views/screens/help_report_screens/report_screen.dart';
-import 'package:craveai/views/screens/terms_condition_screens/terms_conditions_screen.dart';
-import 'package:craveai/views/widgets/my_button.dart';
-import 'package:craveai/views/widgets/my_text.dart';
-import 'package:craveai/views/widgets/my_text_field.dart';
+import 'package:kraveai/generated/app_colors.dart';
+import 'package:kraveai/views/screens/help_report_screens/report_screen.dart';
+import 'package:kraveai/views/screens/terms_condition_screens/terms_conditions_screen.dart';
+import 'package:kraveai/views/widgets/my_button.dart';
+import 'package:kraveai/views/widgets/my_text.dart';
+import 'package:kraveai/views/widgets/my_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 

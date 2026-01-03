@@ -5,7 +5,11 @@ class ModernBottomNav extends StatelessWidget {
   final int currentIndex;
   final Function(int) onTap;
 
-  const ModernBottomNav({required this.currentIndex, required this.onTap});
+  const ModernBottomNav({
+    super.key,
+    required this.currentIndex,
+    required this.onTap,
+  });
 
   static const _icons = [
     Icons.home_rounded,
@@ -74,12 +78,12 @@ class ModernBottomNav extends StatelessWidget {
                     ),
                     borderRadius: BorderRadius.circular(30),
                     border: Border.all(
-                      color: Colors.white.withOpacity(0.05),
+                      color: Colors.white.withValues(alpha: 0.2),
                       width: 1.0,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.28),
+                        color: Colors.black.withValues(alpha: 0.28),
                         blurRadius: 16,
                         offset: const Offset(0, 8),
                       ),
@@ -129,12 +133,12 @@ class ModernBottomNav extends StatelessWidget {
                   colors: [Color(0xFF3A3638), Color(0xFF1C191D)],
                 ),
                 border: Border.all(
-                  color: Colors.black.withOpacity(0.65),
+                  color: Colors.black.withValues(alpha: 0.65),
                   width: 2.4,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.55),
+                    color: Colors.black.withValues(alpha: 0.55),
                     blurRadius: 18,
                     offset: const Offset(0, 9),
                   ),

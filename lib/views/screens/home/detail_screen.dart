@@ -1,21 +1,36 @@
 import 'dart:ui';
 
-import 'package:craveai/generated/app_colors.dart';
-import 'package:craveai/views/screens/home/unlock_screen.dart';
-import 'package:craveai/views/widgets/dynamic_container.dart';
-import 'package:craveai/views/widgets/my_button.dart';
-import 'package:craveai/views/widgets/my_text.dart';
-import 'package:craveai/views/widgets/single_card.dart';
+import 'package:kraveai/generated/app_colors.dart';
+import 'package:kraveai/views/screens/chat_screens/chat_screen.dart';
+import 'package:kraveai/views/widgets/dynamic_container.dart';
+import 'package:kraveai/services/supabase_service.dart';
+import 'package:kraveai/views/widgets/my_button.dart';
+import 'package:kraveai/views/widgets/my_text.dart';
+import 'package:kraveai/views/widgets/single_card.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class DetailScreen extends StatelessWidget {
-  const DetailScreen({super.key});
+import 'package:kraveai/models/character_model.dart';
+
+class DetailScreen extends StatefulWidget {
+  final Character character;
+  const DetailScreen({super.key, required this.character});
 
   @override
+  State<DetailScreen> createState() => _DetailScreenState();
+}
+
+class _DetailScreenState extends State<DetailScreen> {
+  @override
+  @override
   Widget build(BuildContext context) {
-    final List<String> tags = [
-      "#Flirty",
+    final List<String> tags = widget.character.vibe.split(
+      ',',
+    ); // Assuming vibe can be multiple or just use one for now. Or just dynamic tags.
+    // Let's just use the vibe as the first tag and some generic ones if needed, or update Model to have tags.
+    // For now, I'll keep the hardcoded tags but add the character's vibe to the front.
+    final List<String> displayTags = [
+      "#${widget.character.vibe}",
       "#Romantic",
       "#Supportive",
       "#Funny",
@@ -24,6 +39,7 @@ class DetailScreen extends StatelessWidget {
       "#Caring",
       "#Mysterious",
     ];
+
     return Scaffold(
       body: SingleChildScrollView(
         child: SafeArea(
@@ -62,7 +78,11 @@ class DetailScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SingleCard(),
+                      SingleCard(
+                        image: widget.character.imagePath,
+                        name: widget.character.name,
+                        age: widget.character.age,
+                      ),
                       const SizedBox(height: 12),
                       SizedBox(
                         height: 40, // enough for dynamic text container
@@ -70,11 +90,11 @@ class DetailScreen extends StatelessWidget {
                           scrollDirection: Axis.horizontal,
                           padding: const EdgeInsets.symmetric(horizontal: 10),
                           itemBuilder: (context, index) {
-                            return DynamicContainer(text: tags[index]);
+                            return DynamicContainer(text: displayTags[index]);
                           },
                           separatorBuilder: (context, index) =>
                               const SizedBox(width: 10),
-                          itemCount: tags.length,
+                          itemCount: displayTags.length,
                         ),
                       ),
                       const SizedBox(height: 20),
@@ -97,8 +117,7 @@ class DetailScreen extends StatelessWidget {
                           bottom: 16,
                         ),
                         child: MyText(
-                          text:
-                              "Maya is a sweet, playful companion who loves deep conversations, late-night flirting, and making you feel special.",
+                          text: widget.character.description,
                           size: 12,
                           color: Colors.white70,
                         ),
@@ -134,7 +153,7 @@ class DetailScreen extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 6),
                                 MyText(
-                                  text: '120k Chats',
+                                  text: '4.8 Rating', // Valid dummy data
                                   size: 12,
                                   color: Colors.white70,
                                 ),
@@ -157,14 +176,13 @@ class DetailScreen extends StatelessWidget {
                               ),
                               alignment: Alignment.center,
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(
-                                  0.2,
+                                color: Colors.white.withValues(
+                                  alpha: 0.2,
                                 ), // glassy background
                                 borderRadius: BorderRadius.circular(12),
-
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.15),
+                                    color: Colors.black.withValues(alpha: 0.2),
                                     blurRadius: 6,
                                     offset: const Offset(0, 3),
                                   ),
@@ -195,8 +213,25 @@ class DetailScreen extends StatelessWidget {
                           bottom: 8,
                         ),
                         child: MyButton(
-                          onTap: () {
-                            Get.to(() => UnlockScreen());
+                          onTap: () async {
+                            try {
+                              final String charId = await SupabaseService()
+                                  .getOrCreateCharacter(widget.character);
+                              Get.to(
+                                () => ChatScreen(
+                                  characterId: charId,
+                                  name: widget.character.name,
+                                  image: widget.character.imagePath,
+                                ),
+                              );
+                            } catch (e) {
+                              Get.snackbar(
+                                "Error",
+                                "Failed to start chat: $e",
+                                backgroundColor: Colors.red,
+                                colorText: Colors.white,
+                              );
+                            }
                           },
                           buttonText: "Chat Now",
                           radius: 12,
@@ -209,7 +244,9 @@ class DetailScreen extends StatelessWidget {
                           bottom: 8,
                         ),
                         child: MyButton(
-                          onTap: () {},
+                          onTap: () {
+                            Get.back(); // Or navigate to grid
+                          },
                           buttonText: "View More Models",
                           radius: 12,
                           backgroundColor: Colors.white60.withValues(

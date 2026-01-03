@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:craveai/views/widgets/my_text.dart';
+import 'package:kraveai/views/widgets/my_text.dart';
 
 class InboxCard extends StatelessWidget {
   final String name;
@@ -22,8 +22,8 @@ class InboxCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        color: Colors.white.withOpacity(0.05),
-        border: Border.all(color: Colors.white.withOpacity(0.2)),
+        color: Colors.white.withValues(alpha: 0.1),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [

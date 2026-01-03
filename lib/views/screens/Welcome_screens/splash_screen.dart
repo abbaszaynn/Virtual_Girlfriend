@@ -1,5 +1,7 @@
-import 'package:craveai/views/screens/Welcome_screens/welcome_screen.dart';
-import 'package:craveai/views/widgets/common_image_view.dart';
+import 'package:kraveai/services/supabase_service.dart';
+import 'package:kraveai/views/screens/Welcome_screens/welcome_screen.dart';
+import 'package:kraveai/views/screens/dashboard/dashboard_screen.dart';
+import 'package:kraveai/views/widgets/common_image_view.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../generated/assets.dart';
@@ -35,8 +37,17 @@ class _SplashScreenState extends State<SplashScreen>
     );
 
     animationController.forward().then((_) {
-      Get.offAll(() => WelcomeScreen());
+      _checkAuthAndNavigate();
     });
+  }
+
+  void _checkAuthAndNavigate() {
+    final session = SupabaseService().currentUser;
+    if (session != null) {
+      Get.offAll(() => const CustomBottomNav());
+    } else {
+      Get.offAll(() => const WelcomeScreen());
+    }
   }
 
   @override

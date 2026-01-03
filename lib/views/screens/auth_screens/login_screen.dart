@@ -1,15 +1,17 @@
-import 'package:craveai/generated/app_colors.dart';
-import 'package:craveai/generated/assets.dart';
-import 'package:craveai/views/screens/auth_screens/forget_passord_screen.dart';
-import 'package:craveai/views/screens/dashboard/dashboard_screen.dart';
-import 'package:craveai/views/widgets/common_image_view.dart';
-import 'package:craveai/views/widgets/my_button.dart';
-import 'package:craveai/views/widgets/my_text.dart';
-import 'package:craveai/views/widgets/my_text_field.dart';
-import 'package:flutter/material.dart';
 import 'dart:ui';
 
+import 'package:kraveai/generated/app_colors.dart';
+import 'package:kraveai/generated/assets.dart';
+import 'package:kraveai/services/supabase_service.dart';
+import 'package:kraveai/views/screens/auth_screens/forget_passord_screen.dart';
+import 'package:kraveai/views/screens/dashboard/dashboard_screen.dart';
+import 'package:kraveai/views/widgets/common_image_view.dart';
+import 'package:kraveai/views/widgets/my_button.dart';
+import 'package:kraveai/views/widgets/my_text.dart';
+import 'package:kraveai/views/widgets/my_text_field.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -19,6 +21,74 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+
+  bool isLoading = false;
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _login() async {
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      Get.snackbar(
+        "Error",
+        "Please fill in all fields",
+        backgroundColor: Colors.red.withValues(alpha: 0.8),
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final AuthResponse res = await SupabaseService().client.auth
+          .signInWithPassword(email: email, password: password);
+
+      if (res.user != null) {
+        Get.snackbar(
+          "Success",
+          "Logged in successfully!",
+          backgroundColor: Colors.green.withValues(alpha: 0.8),
+          colorText: Colors.white,
+        );
+
+        // Navigate to dashboard
+        Get.offAll(() => const CustomBottomNav());
+      }
+    } on AuthException catch (e) {
+      Get.snackbar(
+        "Error",
+        e.message,
+        backgroundColor: Colors.red.withValues(alpha: 0.8),
+        colorText: Colors.white,
+      );
+    } catch (e) {
+      Get.snackbar(
+        "Error",
+        "An unexpected error occurred: $e",
+        backgroundColor: Colors.red.withValues(alpha: 0.8),
+        colorText: Colors.white,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -67,17 +137,20 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                               const SizedBox(height: 20),
                               MyTextField(
+                                controller: emailController,
                                 label: "Email",
                                 prefix: Icon(Icons.email_outlined),
                                 hint: "your@email.com",
                                 radius: 12,
                               ),
                               MyTextField(
+                                controller: passwordController,
                                 label: "Password",
                                 prefix: Icon(Icons.lock_outline),
                                 hint: "Enter your password",
                                 radius: 12,
-                                suffix: Icon(Icons.visibility_off_outlined),
+                                showVisibilityToggle: true,
+                                isObSecure: true,
                               ),
                               Align(
                                 alignment: Alignment.centerRight,
@@ -96,13 +169,17 @@ class _LoginScreenState extends State<LoginScreen> {
                                   left: 16.0,
                                   right: 16.0,
                                 ),
-                                child: MyButton(
-                                  onTap: () {
-                                    Get.offAll(() => CustomBottomNav());
-                                  },
-                                  buttonText: "Login",
-                                  radius: 12,
-                                ),
+                                child: isLoading
+                                    ? Center(
+                                        child: CircularProgressIndicator(
+                                          color: AppColors.primary,
+                                        ),
+                                      )
+                                    : MyButton(
+                                        onTap: _login,
+                                        buttonText: "Login",
+                                        radius: 12,
+                                      ),
                               ),
                             ],
                           ),

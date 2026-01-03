@@ -1,20 +1,22 @@
 import 'dart:ui';
 
-import 'package:craveai/generated/app_colors.dart';
-import 'package:craveai/generated/assets.dart';
-import 'package:craveai/views/screens/categories_screens/more_categories_screen.dart';
-import 'package:craveai/views/screens/chat_screens/inbox_screen.dart';
-import 'package:craveai/views/screens/create_ai_gf_screens/create_ai_gf_screen.dart';
-import 'package:craveai/views/screens/home/detail_screen.dart';
-import 'package:craveai/views/widgets/categories_card.dart';
-import 'package:craveai/views/widgets/common_image_view.dart';
-import 'package:craveai/views/widgets/dynamic_container.dart';
-import 'package:craveai/views/widgets/home_card.dart';
-import 'package:craveai/views/widgets/my_button.dart';
-import 'package:craveai/views/widgets/my_text.dart';
-import 'package:craveai/views/widgets/single_card.dart';
+import 'package:kraveai/generated/app_colors.dart';
+import 'package:kraveai/generated/assets.dart';
+import 'package:kraveai/views/screens/categories_screens/more_categories_screen.dart';
+import 'package:kraveai/views/screens/chat_screens/inbox_screen.dart';
+import 'package:kraveai/views/screens/create_ai_gf_screens/create_ai_gf_screen.dart';
+import 'package:kraveai/views/screens/home/detail_screen.dart';
+import 'package:kraveai/views/widgets/categories_card.dart';
+import 'package:kraveai/views/widgets/common_image_view.dart';
+import 'package:kraveai/views/widgets/dynamic_container.dart';
+import 'package:kraveai/views/widgets/home_card.dart';
+import 'package:kraveai/views/widgets/my_button.dart';
+import 'package:kraveai/views/widgets/my_text.dart';
+import 'package:kraveai/views/widgets/single_card.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:kraveai/data/character_data.dart';
+import 'package:kraveai/models/character_model.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -269,8 +271,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 20),
 
                 SingleCard(
+                  image: characterList[0].imagePath,
+                  name: characterList[0].name,
+                  age: characterList[0].age,
                   onTap: () {
-                    Get.to(() => DetailScreen());
+                    Get.to(() => DetailScreen(character: characterList[0]));
                   },
                 ),
                 Padding(
@@ -281,7 +286,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   child: MyButton(
                     onTap: () {
-                      Get.to(() => DetailScreen());
+                      Get.to(() => DetailScreen(character: characterList[0]));
                     },
                     buttonText: "Chat Now",
                     radius: 16,
@@ -327,47 +332,37 @@ class _HomeScreenState extends State<HomeScreen> {
                   emoji: "💋",
                 ),
                 const SizedBox(height: 20),
-                GridView.count(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 15,
-                  mainAxisSpacing: 15,
-                  childAspectRatio: 0.9,
+                GridView.builder(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 15,
+                    mainAxisSpacing: 15,
+                    childAspectRatio: 0.9,
+                  ),
+                  itemCount: characterList.length,
                   shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                  children: [
-                    HomeCard(
-                      image: Assets.maya,
-                      title: "Flirty",
-                      age: "25",
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemBuilder: (context, index) {
+                    final Character character = characterList[index];
+                    return HomeCard(
+                      image: character.imagePath,
+                      // Previous design had "Flirty", "Romantic" etc as title, and Age.
+                      // Wait, previous design: title: "Flirty", age: "25".
+                      // Let's use Vibe as Title to match "Choose Your Vibe" header, or Name?
+                      // User request: "use diffterent names... first one will remain maya".
+                      // If I show "Flirty" it hides the name.
+                      // Let's show Name in the card if possible, or Vibe.
+                      // HomeCard has `title` implementation.
+                      // Let's stick to Vibe as the big text if that's what the design was, OR better, show Name.
+                      // "replace these pictures... use diffterent names" -> Implies names are visible.
+                      // Let's use Name as Title.
+                      title: character.name,
+                      age: character.age,
                       ontap: () {
-                        Get.to(() => DetailScreen());
+                        Get.to(() => DetailScreen(character: character));
                       },
-                    ),
-                    HomeCard(
-                      image: Assets.maya,
-                      title: "Romantic",
-                      age: "30",
-                      ontap: () {
-                        Get.to(() => DetailScreen());
-                      },
-                    ),
-                    HomeCard(
-                      image: Assets.maya,
-                      title: "Chill",
-                      age: "22",
-                      ontap: () {
-                        Get.to(() => DetailScreen());
-                      },
-                    ),
-                    HomeCard(
-                      image: Assets.maya,
-                      title: "Adventurous",
-                      age: "28",
-                      ontap: () {
-                        Get.to(() => DetailScreen());
-                      },
-                    ),
-                  ],
+                    );
+                  },
                 ),
                 Padding(
                   padding: const EdgeInsets.all(20.0),

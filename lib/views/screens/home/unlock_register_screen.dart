@@ -1,10 +1,10 @@
-import 'package:craveai/generated/app_colors.dart';
-import 'package:craveai/generated/assets.dart';
-import 'package:craveai/views/screens/home/unlock_premium_features_screen.dart';
-import 'package:craveai/views/widgets/common_image_view.dart';
-import 'package:craveai/views/widgets/my_button.dart';
-import 'package:craveai/views/widgets/my_text.dart';
-import 'package:craveai/views/widgets/my_text_field.dart';
+import 'package:kraveai/generated/app_colors.dart';
+import 'package:kraveai/generated/assets.dart';
+import 'package:kraveai/views/screens/home/unlock_premium_features_screen.dart';
+import 'package:kraveai/views/widgets/common_image_view.dart';
+import 'package:kraveai/views/widgets/my_button.dart';
+import 'package:kraveai/views/widgets/my_text.dart';
+import 'package:kraveai/views/widgets/my_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -98,9 +98,11 @@ class _UnlockRegisterScreenState extends State<UnlockRegisterScreen> {
       children: [
         Radio<String>(
           value: value,
+          // ignore: deprecated_member_use
           groupValue: selected,
           activeColor: Colors.white,
           fillColor: WidgetStateProperty.all(AppColors.secondary),
+          // ignore: deprecated_member_use
           onChanged: (val) {
             setState(() => selected = val!);
           },

@@ -1,15 +1,13 @@
-import 'dart:ui';
-
-import 'package:craveai/generated/app_colors.dart';
-import 'package:craveai/generated/assets.dart';
-import 'package:craveai/views/screens/Subscription_Screens/complete_your%20_purchase_screen.dart';
-import 'package:craveai/views/screens/create_ai_gf_screens/widgets/advanced_settings_widget.dart';
-import 'package:craveai/views/screens/create_ai_gf_screens/widgets/basic_information_widget.dart';
-import 'package:craveai/views/screens/create_ai_gf_screens/widgets/choice_voice_widget.dart';
-import 'package:craveai/views/screens/create_ai_gf_screens/widgets/personality_builder_widget.dart';
-import 'package:craveai/views/widgets/common_image_view.dart';
-import 'package:craveai/views/widgets/my_button.dart';
-import 'package:craveai/views/widgets/my_text.dart';
+import 'package:kraveai/controllers/create_ai_gf_controller.dart';
+import 'package:kraveai/generated/app_colors.dart';
+import 'package:kraveai/generated/assets.dart';
+import 'package:kraveai/views/screens/create_ai_gf_screens/widgets/advanced_settings_widget.dart';
+import 'package:kraveai/views/screens/create_ai_gf_screens/widgets/basic_information_widget.dart';
+import 'package:kraveai/views/screens/create_ai_gf_screens/widgets/choice_voice_widget.dart';
+import 'package:kraveai/views/screens/create_ai_gf_screens/widgets/personality_builder_widget.dart';
+import 'package:kraveai/views/widgets/common_image_view.dart';
+import 'package:kraveai/views/widgets/my_button.dart';
+import 'package:kraveai/views/widgets/my_text.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -21,6 +19,16 @@ class CreateAiGfScreen extends StatefulWidget {
 }
 
 class _CreateAiGfScreenState extends State<CreateAiGfScreen> {
+  final CreateAiGfController controller = Get.put(CreateAiGfController());
+
+  @override
+  void dispose() {
+    // Ideally do not delete if you want to persist state if user comes back,
+    // but typically we reset on exit.
+    Get.delete<CreateAiGfController>();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -78,12 +86,18 @@ class _CreateAiGfScreenState extends State<CreateAiGfScreen> {
                 AdvancedSettingsWidget(),
                 Padding(
                   padding: const EdgeInsets.all(20.0),
-                  child: MyButton(
-                    onTap: () {
-                      Get.to(() => CompleteYourPurchaseScreen());
-                    },
-                    buttonText: "Create My AI Model",
-                    radius: 12,
+                  child: Obx(
+                    () => controller.isLoading.value
+                        ? const CircularProgressIndicator(
+                            color: AppColors.primary,
+                          )
+                        : MyButton(
+                            onTap: () {
+                              controller.createCharacter();
+                            },
+                            buttonText: "Create My AI Model",
+                            radius: 12,
+                          ),
                   ),
                 ),
               ],
