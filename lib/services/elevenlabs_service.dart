@@ -1,30 +1,21 @@
-import 'dart:io';
+import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:http/http.dart'
-    as http; // GetConnect doesn't handle binary bytes easily
-import 'package:path_provider/path_provider.dart';
+import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
+import 'elevenlabs_service_stub.dart'
+    if (dart.library.html) 'elevenlabs_service_web.dart'
+    if (dart.library.io) 'elevenlabs_service_mobile.dart';
 
 class ElevenLabsService {
   final String _baseUrl = 'https://api.elevenlabs.io/v1';
 
-  Future<File?> generateAudio({
+  /// Returns audio URL (Blob URL for web, file path for mobile/desktop)
+  Future<String?> generateAudio({
     required String text,
     required String voiceId,
   }) async {
     final rawKey = dotenv.env['ELEVENLABS_API_KEY'];
     final apiKey = rawKey?.trim();
-
-    debugPrint("DEBUG: Raw Key from .env: '$rawKey'");
-    if (apiKey != null) {
-      debugPrint("DEBUG: Trimmed Key Length: ${apiKey.length}");
-      debugPrint("DEBUG: Key starts with: ${apiKey.substring(0, 4)}...");
-      debugPrint(
-        "DEBUG: Key ends with: ...${apiKey.substring(apiKey.length - 4)}",
-      );
-    } else {
-      debugPrint("DEBUG: Key is NULL");
-    }
 
     if (apiKey == null || apiKey.isEmpty) {
       debugPrint("❌ ElevenLabs Error: API Key missing");
@@ -32,6 +23,9 @@ class ElevenLabsService {
     }
 
     try {
+      // Sanitize text: remove control characters that cause JSON issues
+      final sanitizedText = text.replaceAll(RegExp(r'[\x00-\x1F\x7F]'), '');
+
       final url = Uri.parse('$_baseUrl/text-to-speech/$voiceId');
       final response = await http.post(
         url,
@@ -40,19 +34,20 @@ class ElevenLabsService {
           'Content-Type': 'application/json',
           'Accept': 'audio/mpeg',
         },
-        body:
-            '{"text": "$text", "model_id": "eleven_monolingual_v1", "voice_settings": {"stability": 0.5, "similarity_boost": 0.5}}',
+        body: jsonEncode({
+          'text': sanitizedText,
+          'model_id': 'eleven_turbo_v2_5',
+          'voice_settings': {'stability': 0.5, 'similarity_boost': 0.5},
+        }),
       );
 
       if (response.statusCode == 200) {
         final bytes = response.bodyBytes;
-        final dir = await getTemporaryDirectory();
-        final file = File(
-          '${dir.path}/audio_${DateTime.now().millisecondsSinceEpoch}.mp3',
-        );
-        await file.writeAsBytes(bytes);
-        debugPrint("✅ Audio generated: ${file.path}");
-        return file;
+
+        // Use platform-specific implementation
+        final audioUrl = await createAudioUrl(bytes);
+        debugPrint("✅ Audio generated: $audioUrl");
+        return audioUrl;
       } else {
         debugPrint(
           "❌ ElevenLabs Error: ${response.statusCode} - ${response.body}",

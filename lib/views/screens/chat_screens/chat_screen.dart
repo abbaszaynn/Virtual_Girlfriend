@@ -7,17 +7,21 @@ import 'package:kraveai/views/widgets/common_image_view.dart';
 import 'package:kraveai/views/widgets/my_text.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:kraveai/models/character_model.dart';
 
 class ChatScreen extends StatefulWidget {
   final String characterId;
   final String name;
   final String image;
+  final Character?
+  character; // Optional: if provided, will use detailed descriptions
 
   const ChatScreen({
     super.key,
     required this.characterId,
     required this.name,
     required this.image,
+    this.character, // Make this optional for backwards compatibility
   });
 
   @override
@@ -31,7 +35,12 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
     controller = Get.put(ChatController());
-    controller.initializeRequest(widget.characterId, widget.name, widget.image);
+    controller.initializeRequest(
+      widget.characterId,
+      widget.name,
+      widget.image,
+      character: widget.character, // Pass character object if available
+    );
   }
 
   @override

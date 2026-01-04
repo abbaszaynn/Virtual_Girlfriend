@@ -1,49 +1,52 @@
 import 'dart:convert';
+import 'dart:async';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 
 class ReplicateService {
-  // Using a fast, high-quality realistic model
-  // Model: stability-ai/sdxl (Official)
-  // Version: 39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b
-  static const String modelVersion =
-      "39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b";
-  final String _baseUrl = 'https://api.replicate.com/v1/predictions';
+  // Using Supabase Edge Function as proxy to bypass CORS on web
+  // Replace YOUR_PROJECT_REF with your actual Supabase project reference
+  // Format: https://YOUR_PROJECT_REF.supabase.co/functions/v1/
+  String get _proxyUrl {
+    final supabaseUrl = dotenv.env['SUPABASE_URL'];
+    if (supabaseUrl == null || supabaseUrl.isEmpty) {
+      debugPrint("❌ SUPABASE_URL not found in .env");
+      return '';
+    }
+    // Extract project ref from URL (e.g., https://abcxyz.supabase.co)
+    return '$supabaseUrl/functions/v1/replicate_proxy';
+  }
+
+  String get _pollUrl {
+    final supabaseUrl = dotenv.env['SUPABASE_URL'];
+    if (supabaseUrl == null || supabaseUrl.isEmpty) {
+      return '';
+    }
+    return '$supabaseUrl/functions/v1/replicate_poll';
+  }
 
   Future<String?> generateImage(String prompt) async {
-    final apiKey = dotenv.env['REPLICATE_API_KEY']?.trim();
-    if (apiKey == null || apiKey.isEmpty) {
-      debugPrint("❌ Replicate Error: API Key missing");
+    if (_proxyUrl.isEmpty) {
+      debugPrint("❌ Supabase URL not configured");
       return null;
     }
 
     try {
-      debugPrint("DEBUG: Generating image for prompt: $prompt");
-
-      // 1. Start Prediction
-      final response = await http.post(
-        Uri.parse(_baseUrl),
-        headers: {
-          'Authorization': 'Token $apiKey',
-          'Content-Type': 'application/json',
-          'Prefer':
-              'wait', // Wait slightly to try and get result immediately, but usually it takes longer
-        },
-        body: jsonEncode({
-          "version": modelVersion,
-          "input": {
-            "prompt":
-                "A realistic photo of a beautiful young woman, $prompt, high quality, 8k, photorealistic",
-            "negative_prompt":
-                "cartoon, illustration, anime, ugly, deformed, low quality, pixelated, blur",
-            "width": 768,
-            "height": 1024, // Portrait for mobile
-          },
-        }),
+      debugPrint(
+        "DEBUG: Generating image via Supabase proxy for prompt: $prompt",
       );
 
-      if (response.statusCode == 201 || response.statusCode == 200) {
+      // 1. Start Prediction via proxy
+      final response = await http
+          .post(
+            Uri.parse(_proxyUrl),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'prompt': prompt}),
+          )
+          .timeout(const Duration(seconds: 30));
+
+      if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final String status = data['status'];
 
@@ -58,21 +61,36 @@ class ReplicateService {
         }
 
         // If 'starting' or 'processing', we need to poll
-        final getUrl = data['urls']['get'];
-        return await _pollForResult(getUrl, apiKey);
+        final getUrl = data['urls']?['get'];
+        if (getUrl != null) {
+          return await _pollForResult(getUrl);
+        } else {
+          debugPrint("❌ No polling URL returned from proxy");
+          return null;
+        }
       } else {
-        debugPrint(
-          "❌ Replicate Error: ${response.statusCode} - ${response.body}",
-        );
+        debugPrint("❌ Proxy Error: ${response.statusCode} - ${response.body}");
         return null;
       }
-    } catch (e) {
-      debugPrint("❌ Replicate Exception: $e");
+    } on http.ClientException catch (e) {
+      debugPrint("❌ HTTP ClientException: $e");
+      return null;
+    } on TimeoutException catch (e) {
+      debugPrint("❌ Request Timeout: $e");
+      return null;
+    } catch (e, stackTrace) {
+      debugPrint("❌ Exception: $e");
+      debugPrint("Stack trace: $stackTrace");
       return null;
     }
   }
 
-  Future<String?> _pollForResult(String url, String apiKey) async {
+  Future<String?> _pollForResult(String predictionUrl) async {
+    if (_pollUrl.isEmpty) {
+      debugPrint("❌ Poll URL not configured");
+      return null;
+    }
+
     int attempts = 0;
     while (attempts < 30) {
       // Max 30 attempts (~1 min)
@@ -80,12 +98,10 @@ class ReplicateService {
       attempts++;
 
       try {
-        final response = await http.get(
-          Uri.parse(url),
-          headers: {
-            'Authorization': 'Token $apiKey',
-            'Content-Type': 'application/json',
-          },
+        final response = await http.post(
+          Uri.parse(_pollUrl),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'predictionUrl': predictionUrl}),
         );
 
         if (response.statusCode == 200) {

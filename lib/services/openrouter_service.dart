@@ -48,7 +48,7 @@ class OpenRouterService {
               'X-Title': 'Kraveai',
             },
             body: jsonEncode({
-              'model': 'mistralai/mistral-7b-instruct:free',
+              'model': 'nousresearch/hermes-3-llama-3.1-405b',
               'messages': messages,
             }),
           )
@@ -91,7 +91,7 @@ class OpenRouterService {
               'X-Title': 'Kraveai',
             },
             body: jsonEncode({
-              'model': 'google/gemma-7b-it:free',
+              'model': 'cognitivecomputations/dolphin-mixtral-8x22b',
               'messages': messages,
             }),
           )

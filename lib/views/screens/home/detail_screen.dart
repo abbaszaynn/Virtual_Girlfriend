@@ -222,6 +222,8 @@ class _DetailScreenState extends State<DetailScreen> {
                                   characterId: charId,
                                   name: widget.character.name,
                                   image: widget.character.imagePath,
+                                  character: widget
+                                      .character, // Pass full character object
                                 ),
                               );
                             } catch (e) {

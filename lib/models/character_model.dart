@@ -7,6 +7,7 @@ class Character {
   final String description;
   final String systemPrompt;
   final String voiceId;
+  final String imagePromptDescription;
 
   const Character({
     required this.id,
@@ -17,5 +18,6 @@ class Character {
     required this.description,
     required this.systemPrompt,
     required this.voiceId,
+    required this.imagePromptDescription,
   });
 }

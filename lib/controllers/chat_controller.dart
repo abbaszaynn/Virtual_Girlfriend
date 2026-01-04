@@ -1,15 +1,15 @@
-// import 'package:kraveai/services/elevenlabs_service.dart';
-import 'package:kraveai/services/bytez_audio_service.dart';
+import 'package:kraveai/services/elevenlabs_service.dart';
+// import 'package:kraveai/services/bytez_audio_service.dart';
 import 'package:just_audio/just_audio.dart';
-import 'dart:io';
 import 'package:kraveai/services/supabase_service.dart';
 import 'package:kraveai/services/openrouter_service.dart';
-import 'package:kraveai/services/bytez_image_service.dart';
-// import 'package:kraveai/services/replicate_service.dart';
+// import 'package:kraveai/services/bytez_image_service.dart';
+import 'package:kraveai/services/replicate_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:kraveai/models/character_model.dart';
 
 class ChatController extends GetxController {
   final SupabaseClient client = SupabaseService().client;
@@ -47,14 +47,15 @@ class ChatController extends GetxController {
   final ScrollController scrollController = ScrollController();
 
   final OpenRouterService _aiService = OpenRouterService();
-  final BytezAudioService _audioService = BytezAudioService(); // Audio Service
-  // final ElevenLabsService _audioService = ElevenLabsService();
+  // final BytezAudioService _audioService = BytezAudioService(); // Audio Service
+  final ElevenLabsService _audioService = ElevenLabsService();
 
   late String conversationId;
   late String characterId;
   String? characterName;
   String? characterImage;
   String systemPrompt = "";
+  Character? currentCharacter; // Store the full Character object
 
   @override
   void onClose() {
@@ -62,10 +63,16 @@ class ChatController extends GetxController {
     super.onClose();
   }
 
-  void initializeRequest(String charId, String charName, String charImg) {
+  void initializeRequest(
+    String charId,
+    String charName,
+    String charImg, {
+    Character? character,
+  }) {
     characterId = charId;
     characterName = charName;
     characterImage = charImg;
+    currentCharacter = character; // Store character object for image gen
     _getOrCreateConversation();
   }
 
@@ -135,12 +142,19 @@ class ChatController extends GetxController {
 
   // ... _loadMessages, _subscribeToMessages, sendMessage ...
 
+  // Utility: Clean text by removing URLs
+  String _cleanTextForDisplay(String text) {
+    // Remove URLs (http/https)
+    final urlPattern = RegExp(r'https?://[^\s]+', caseSensitive: false);
+    return text.replaceAll(urlPattern, '').trim();
+  }
+
   // Audio Playback Method
   Future<void> playMessageAudio(String messageId, String text) async {
-    // if (voiceId == null || voiceId!.isEmpty) {
-    //   _showError("No voice configured for this character");
-    //   return;
-    // }
+    if (voiceId == null || voiceId!.isEmpty) {
+      _showError("No voice configured for this character");
+      return;
+    }
 
     // Toggle off if already playing this message
     if (playingMessageId.value == messageId && audioPlayer.playing) {
@@ -153,14 +167,20 @@ class ChatController extends GetxController {
       isAudioLoading.value = true;
       playingMessageId.value = messageId; // Set current playing ID
 
-      debugPrint("DEBUG: Generating audio for: $text");
-      final File? audioFile = await _audioService.generateAudio(text);
-      // text: text,
-      // voiceId: voiceId!,
-      // );
+      // Clean text before sending to audio service (remove URLs)
+      final cleanText = _cleanTextForDisplay(text);
 
-      if (audioFile != null) {
-        await audioPlayer.setFilePath(audioFile.path);
+      debugPrint("DEBUG: Generating audio for: $cleanText");
+
+      // generateAudio now returns a String URL (Blob URL for web, file path for mobile)
+      final String? audioUrl = await _audioService.generateAudio(
+        text: cleanText,
+        voiceId: voiceId!,
+      );
+
+      if (audioUrl != null) {
+        // Use setUrl for both web (Blob URL) and mobile (file:// URL)
+        await audioPlayer.setUrl(audioUrl);
         await audioPlayer.play();
 
         // Reset when finished
@@ -170,12 +190,12 @@ class ChatController extends GetxController {
           }
         });
       } else {
-        _showError("Failed to generate audio");
+        debugPrint("ERROR: Failed to generate audio - audioUrl is null");
         playingMessageId.value = "";
       }
     } catch (e) {
       debugPrint("Audio Playback Error: $e");
-      _showError("Audio error: $e");
+      // Don't show error during async - just log it
       playingMessageId.value = "";
     } finally {
       isAudioLoading.value = false;
@@ -291,13 +311,16 @@ class ChatController extends GetxController {
       if (responseText != null) {
         debugPrint("DEBUG: AI Response: $responseText");
 
-        // 4. Optimistic AI Update (Show immediately)
+        // Clean the response text (remove URLs)
+        final cleanResponseText = _cleanTextForDisplay(responseText);
+
+        // 4. Optimistic AI Update (Show immediately with cleaned text)
         final tempAiMsgId = 'temp-ai-${DateTime.now().millisecondsSinceEpoch}';
         final tempAiMessage = {
           'id': tempAiMsgId,
           'conversation_id': conversationId,
           'sender_type': 'character',
-          'content': responseText,
+          'content': cleanResponseText,
           'created_at': DateTime.now().toIso8601String(),
         };
         messages.add(tempAiMessage);
@@ -309,14 +332,14 @@ class ChatController extends GetxController {
           await client.from('messages').insert({
             'conversation_id': conversationId,
             'sender_type': 'character',
-            'content': responseText,
+            'content': cleanResponseText,
           });
 
           // 6. Update Conversation Last Message
           await client
               .from('conversations')
               .update({
-                'last_message': responseText,
+                'last_message': cleanResponseText,
                 'last_message_at': DateTime.now().toIso8601String(),
               })
               .eq('id', conversationId);
@@ -356,20 +379,33 @@ class ChatController extends GetxController {
 
   // Helper for safe UI updates
   void _showError(String message) {
-    if (Get.context != null) {
-      Get.snackbar(
-        'Error',
-        message,
-        colorText: Colors.white,
-        backgroundColor: Colors.red,
-        snackPosition: SnackPosition.BOTTOM,
-        margin: const EdgeInsets.all(10),
-      );
-    } else {
-      debugPrint("Supressed Snackbar (No Context): $message");
-      // Fallback: Could use a global key if strictly required,
-      // but usually debugPrint is enough for background errors.
-    }
+    debugPrint("⚠️ Error: $message");
+
+    // Use post frame callback to ensure overlay exists
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      try {
+        // Check if Get context exists and is mounted
+        if (Get.context != null && Get.isRegistered<ChatController>()) {
+          final controller = Get.find<ChatController>();
+          // Only show snackbar if we're still in the widget tree
+          if (controller.isClosed == false) {
+            Get.snackbar(
+              'Error',
+              message,
+              colorText: Colors.white,
+              backgroundColor: Colors.red,
+              snackPosition: SnackPosition.BOTTOM,
+              margin: const EdgeInsets.all(10),
+              duration: const Duration(seconds: 3),
+            );
+          }
+        } else {
+          debugPrint("Suppressed Snackbar (No Context): $message");
+        }
+      } catch (e) {
+        debugPrint("Error showing snackbar: $e - Original message: $message");
+      }
+    });
   }
 
   // Image Generation Method
@@ -414,9 +450,34 @@ class ChatController extends GetxController {
 
     isImageGenerating.value = true;
 
-    // 2. Generate Prompt based on context
+    // 2. Generate contextual prompt using character's physical description
+    // Extract context from last few messages for dynamic scenarios
+    String contextHint = "selfie, looking at camera";
+    if (messages.length >= 2) {
+      final recentMessages = messages.reversed.take(3).toList();
+      for (var msg in recentMessages) {
+        final content = (msg['content'] ?? '').toString().toLowerCase();
+        if (content.contains('bed') || content.contains('bedroom')) {
+          contextHint = "lying in bed, bedroom setting";
+          break;
+        } else if (content.contains('dress') || content.contains('outfit')) {
+          contextHint = "wearing elegant outfit, full body pose";
+          break;
+        } else if (content.contains('beach') || content.contains('pool')) {
+          contextHint = "at the beach, outdoor setting";
+          break;
+        }
+      }
+    }
+
+    // Use character's detailed appearance description
+    final baseAppearance =
+        currentCharacter?.imagePromptDescription ??
+        "beautiful woman with ${characterName ?? 'attractive'} features";
+
     final imagePrompt =
-        "selfie of ${characterName ?? 'a beautiful girl'}, ${characterImage ?? ''}, lying in bed or posing cute, looking at camera, high quality, photorealistic, 8k";
+        "$baseAppearance, $contextHint, flirty expression, cinematic lighting, high quality, photorealistic";
+    debugPrint("DEBUG: Image Generation Prompt: $imagePrompt");
 
     try {
       // 3. Optimistic "Generating..." Message
@@ -433,8 +494,8 @@ class ChatController extends GetxController {
       _scrollToBottom();
 
       // 4. Call Service
-      final imageUrl = await BytezImageService().generateImage(imagePrompt);
-      // final imageUrl = await ReplicateService().generateImage(imagePrompt);
+      // final imageUrl = await BytezImageService().generateImage(imagePrompt);
+      final imageUrl = await ReplicateService().generateImage(imagePrompt);
 
       // Remove temp
       messages.removeWhere((m) => m['id'] == tempId);
@@ -462,6 +523,7 @@ class ChatController extends GetxController {
         });
         _scrollToBottom();
       } else {
+        debugPrint("ERROR: Image generation returned null");
         _showError("Failed to generate image. Please try again.");
       }
     } catch (e) {
