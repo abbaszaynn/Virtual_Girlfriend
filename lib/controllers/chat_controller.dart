@@ -2,6 +2,7 @@ import 'package:kraveai/services/elevenlabs_service.dart';
 // import 'package:kraveai/services/bytez_audio_service.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:kraveai/services/supabase_service.dart';
+import 'package:kraveai/services/guest_service.dart';
 import 'package:kraveai/services/openrouter_service.dart';
 // import 'package:kraveai/services/bytez_image_service.dart';
 import 'package:kraveai/services/replicate_service.dart';
@@ -20,6 +21,12 @@ class ChatController extends GetxController {
   final isSending = false.obs;
   final isImageGenerating = false.obs; // New observable
 
+  // Guest Mode
+  final RxBool isGuestUser = false.obs;
+  final RxInt guestMessageCount = 0.obs;
+  final RxBool guestLimitReached = false.obs;
+  final GuestService _guestService = GuestService();
+
   // Image Generation
   final RxInt freeImageCount = 0.obs;
   final int maxFreeImages = 5;
@@ -29,6 +36,17 @@ class ChatController extends GetxController {
   void onInit() {
     super.onInit();
     _initPrefs();
+    _setupAudioListener();
+  }
+
+  void _setupAudioListener() {
+    // Set up a persistent listener for audio completion
+    audioPlayer.playerStateStream.listen((state) {
+      if (state.processingState == ProcessingState.completed) {
+        debugPrint("DEBUG: Audio playback completed");
+        playingMessageId.value = "";
+      }
+    });
   }
 
   Future<void> _initPrefs() async {
@@ -50,7 +68,7 @@ class ChatController extends GetxController {
   // final BytezAudioService _audioService = BytezAudioService(); // Audio Service
   final ElevenLabsService _audioService = ElevenLabsService();
 
-  late String conversationId;
+  String? conversationId; // Nullable to handle initialization failures
   late String characterId;
   String? characterName;
   String? characterImage;
@@ -79,8 +97,28 @@ class ChatController extends GetxController {
   Future<void> _getOrCreateConversation() async {
     isLoading.value = true;
     try {
-      final userId = client.auth.currentUser!.id;
-      debugPrint("DEBUG: Current User ID: $userId");
+      // Check if user is in guest mode
+      final currentUser = client.auth.currentUser;
+      final isGuest = currentUser == null;
+      isGuestUser.value = isGuest;
+
+      String userId;
+      String? guestSessionId;
+
+      if (isGuest) {
+        // Guest mode - use guest session
+        debugPrint("DEBUG: User is in guest mode");
+        final guestUser = _guestService.currentGuestUser;
+        if (guestUser == null) {
+          throw Exception('No guest session found');
+        }
+        guestSessionId = guestUser.sessionId;
+        userId = 'guest_$guestSessionId'; // Temporary ID for guest
+      } else {
+        userId = currentUser.id;
+      }
+
+      debugPrint("DEBUG: Current User ID: $userId (Guest: $isGuest)");
       debugPrint("DEBUG: Target Character ID: $characterId");
 
       // 0. Fetch Character System Prompt AND Voice ID
@@ -104,23 +142,46 @@ class ChatController extends GetxController {
       final data = await client
           .from('conversations')
           .select()
-          .eq('driver_user_id', userId)
+          .eq(
+            isGuest ? 'guest_session_id' : 'driver_user_id',
+            isGuest ? (guestSessionId ?? '') : userId,
+          )
           .eq('match_character_id', characterId)
           .maybeSingle();
 
       if (data != null) {
         conversationId = data['id'];
         debugPrint("DEBUG: Found existing conversation: $conversationId");
+
+        // Load guest message count if guest
+        if (isGuest) {
+          guestMessageCount.value = await _guestService.getGuestMessageCount(
+            conversationId!,
+          );
+          guestLimitReached.value = await _guestService.hasReachedLimit(
+            conversationId!,
+          );
+          debugPrint(
+            "DEBUG: Guest message count: ${guestMessageCount.value}/5",
+          );
+        }
       } else {
         // 2. Create new conversation
         debugPrint("DEBUG: Creating new conversation...");
+        final insertData = {
+          'match_character_id': characterId,
+          'last_message': 'Started a new chat',
+        };
+
+        if (isGuest) {
+          insertData['guest_session_id'] = guestSessionId ?? '';
+        } else {
+          insertData['driver_user_id'] = userId;
+        }
+
         final newConv = await client
             .from('conversations')
-            .insert({
-              'driver_user_id': userId,
-              'match_character_id': characterId,
-              'last_message': 'Started a new chat',
-            })
+            .insert(insertData)
             .select()
             .single();
         conversationId = newConv['id'];
@@ -151,6 +212,38 @@ class ChatController extends GetxController {
 
   // Audio Playback Method
   Future<void> playMessageAudio(String messageId, String text) async {
+    // Block audio for guest users
+    if (isGuestUser.value) {
+      Get.dialog(
+        AlertDialog(
+          backgroundColor: const Color(0xFF1A1A1A),
+          title: const Text(
+            "Feature Locked",
+            style: TextStyle(color: Colors.white),
+          ),
+          content: const Text(
+            "Audio messages are available for registered users. Sign up to unlock voice messages and more!",
+            style: TextStyle(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Get.back(),
+              child: const Text("Maybe Later"),
+            ),
+            TextButton(
+              onPressed: () {
+                Get.back();
+                // TODO: Navigate to registration
+                Get.snackbar("Coming Soon", "Registration will be added soon!");
+              },
+              child: const Text("Sign Up", style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
     if (voiceId == null || voiceId!.isEmpty) {
       _showError("No voice configured for this character");
       return;
@@ -179,37 +272,44 @@ class ChatController extends GetxController {
       );
 
       if (audioUrl != null) {
-        // Use setUrl for both web (Blob URL) and mobile (file:// URL)
-        await audioPlayer.setUrl(audioUrl);
-        await audioPlayer.play();
+        debugPrint("✅ Audio generated: $audioUrl");
 
-        // Reset when finished
-        audioPlayer.playerStateStream.listen((state) {
-          if (state.processingState == ProcessingState.completed) {
-            playingMessageId.value = "";
-          }
-        });
+        try {
+          // Stop any currently playing audio first
+          await audioPlayer.stop();
+
+          // Set the new audio URL
+          debugPrint("DEBUG: Setting audio URL...");
+          await audioPlayer.setUrl(audioUrl);
+
+          debugPrint("DEBUG: Playing audio...");
+          await audioPlayer.play();
+
+          debugPrint("✅ Audio playback started successfully");
+        } catch (e) {
+          debugPrint("❌ Audio player error: $e");
+          playingMessageId.value = "";
+          _showError("Failed to play audio");
+        }
       } else {
         debugPrint("ERROR: Failed to generate audio - audioUrl is null");
         playingMessageId.value = "";
       }
     } catch (e) {
       debugPrint("Audio Playback Error: $e");
-      // Don't show error during async - just log it
       playingMessageId.value = "";
     } finally {
       isAudioLoading.value = false;
     }
   }
 
-  // ... (Keep existing _loadMessages, _subscribeToMessages, sendMessage, _performSupabaseOperation, _scrollToBottom methods but ensure they are inside the class)
-
   Future<void> _loadMessages() async {
+    if (conversationId == null) return; // Guard
     debugPrint("DEBUG: Loading messages for conversation $conversationId");
     final response = await client
         .from('messages')
         .select()
-        .eq('conversation_id', conversationId)
+        .eq('conversation_id', conversationId!)
         .order('created_at', ascending: true);
 
     debugPrint("DEBUG: Loaded ${response.length} messages");
@@ -218,11 +318,12 @@ class ChatController extends GetxController {
   }
 
   void _subscribeToMessages() {
+    if (conversationId == null) return; // Guard
     debugPrint("DEBUG: Subscribing to messages...");
     client
         .from('messages')
         .stream(primaryKey: ['id'])
-        .eq('conversation_id', conversationId)
+        .eq('conversation_id', conversationId!)
         .order('created_at')
         .listen((List<Map<String, dynamic>> data) {
           debugPrint(
@@ -238,8 +339,32 @@ class ChatController extends GetxController {
     final text = textController.text.trim();
     if (text.isEmpty) return;
 
-    // 0. CHECK LIMIT
-    if (messages.length >= 10) {
+    // 0. CHECK CONVERSATION INITIALIZED
+    if (conversationId == null) {
+      debugPrint("❌ ERROR: Conversation not initialized yet");
+      _showError('Failed to initialize chat. Please try reloading.');
+      return;
+    }
+
+    // 1. CHECK GUEST LIMIT FIRST
+    if (isGuestUser.value) {
+      if (guestLimitReached.value) {
+        debugPrint("DEBUG: Guest limit already reached");
+        return; // Don't send message, blurred image already shown
+      }
+
+      if (guestMessageCount.value >= 5) {
+        debugPrint("DEBUG: Guest reached 5 messages, showing blurred image");
+        guestLimitReached.value = true;
+
+        // Add blurred image message
+        await _addGuestLimitMessage();
+        return;
+      }
+    }
+
+    // 2. CHECK REGULAR LIMIT (for registered users)
+    if (!isGuestUser.value && messages.length >= 10) {
       Get.dialog(
         AlertDialog(
           backgroundColor: const Color(0xFF1A1A1A),
@@ -283,7 +408,7 @@ class ChatController extends GetxController {
     final tempUserMsgId = 'temp-user-${DateTime.now().millisecondsSinceEpoch}';
     final tempUserMessage = {
       'id': tempUserMsgId,
-      'conversation_id': conversationId,
+      'conversation_id': conversationId!,
       'sender_type': 'user',
       'content': text,
       'created_at': DateTime.now().toIso8601String(),
@@ -295,11 +420,22 @@ class ChatController extends GetxController {
       // 2. Insert User Message to DB (Retry Wrapper)
       await _performSupabaseOperation(() async {
         await client.from('messages').insert({
-          'conversation_id': conversationId,
+          'conversation_id': conversationId!,
           'sender_type': 'user',
           'content': text,
         }).select();
       });
+
+      // 2.5 Increment guest message count if guest
+      if (isGuestUser.value) {
+        await _guestService.incrementGuestMessageCount(conversationId!);
+        guestMessageCount.value = await _guestService.getGuestMessageCount(
+          conversationId!,
+        );
+        debugPrint(
+          "DEBUG: Guest message count after send: ${guestMessageCount.value}/5",
+        );
+      }
 
       // 3. Get AI Response
       final responseText = await _aiService.getChatCompletion(
@@ -318,7 +454,7 @@ class ChatController extends GetxController {
         final tempAiMsgId = 'temp-ai-${DateTime.now().millisecondsSinceEpoch}';
         final tempAiMessage = {
           'id': tempAiMsgId,
-          'conversation_id': conversationId,
+          'conversation_id': conversationId!,
           'sender_type': 'character',
           'content': cleanResponseText,
           'created_at': DateTime.now().toIso8601String(),
@@ -330,7 +466,7 @@ class ChatController extends GetxController {
         // We don't await this to keep UI responsive, but we catch errors.
         _performSupabaseOperation(() async {
           await client.from('messages').insert({
-            'conversation_id': conversationId,
+            'conversation_id': conversationId!,
             'sender_type': 'character',
             'content': cleanResponseText,
           });
@@ -342,7 +478,7 @@ class ChatController extends GetxController {
                 'last_message': cleanResponseText,
                 'last_message_at': DateTime.now().toIso8601String(),
               })
-              .eq('id', conversationId);
+              .eq('id', conversationId!);
         }).catchError((e) {
           debugPrint("DEBUG ERROR: Background AI save failed: $e");
         });
@@ -410,6 +546,38 @@ class ChatController extends GetxController {
 
   // Image Generation Method
   Future<void> requestImage() async {
+    // 0. Block image generation for guest users
+    if (isGuestUser.value) {
+      Get.dialog(
+        AlertDialog(
+          backgroundColor: const Color(0xFF1A1A1A),
+          title: const Text(
+            "Feature Locked",
+            style: TextStyle(color: Colors.white),
+          ),
+          content: const Text(
+            "Photo generation is available for registered users. Sign up to unlock photos and more features!",
+            style: TextStyle(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Get.back(),
+              child: const Text("Maybe Later"),
+            ),
+            TextButton(
+              onPressed: () {
+                Get.back();
+                // TODO: Navigate to registration
+                Get.snackbar("Coming Soon", "Registration will be added soon!");
+              },
+              child: const Text("Sign Up", style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
     // 1. Check Free Limit
     if (freeImageCount.value >= maxFreeImages) {
       // Show Subscription Dialog
@@ -484,7 +652,7 @@ class ChatController extends GetxController {
       final tempId = 'temp-img-${DateTime.now().millisecondsSinceEpoch}';
       final tempMsg = {
         'id': tempId,
-        'conversation_id': conversationId,
+        'conversation_id': conversationId!,
         'sender_type': 'image', // Special type
         'content': 'Generating photo...',
         'created_at': DateTime.now().toIso8601String(),
@@ -504,7 +672,7 @@ class ChatController extends GetxController {
         // 5. Success! Save to DB
         await _performSupabaseOperation(() async {
           await client.from('messages').insert({
-            'conversation_id': conversationId,
+            'conversation_id': conversationId!,
             'sender_type': 'image', // Vital for UI
             'content': imageUrl,
           });
@@ -516,7 +684,7 @@ class ChatController extends GetxController {
 
         // 7. Add to local list immediately
         messages.add({
-          'conversation_id': conversationId,
+          'conversation_id': conversationId!,
           'sender_type': 'image',
           'content': imageUrl,
           'created_at': DateTime.now().toIso8601String(),
@@ -531,6 +699,37 @@ class ChatController extends GetxController {
       _showError("Could not generate image");
     } finally {
       isImageGenerating.value = false;
+    }
+  }
+
+  // Add guest limit reached message with blurred image
+  Future<void> _addGuestLimitMessage() async {
+    try {
+      // 1. Add blurred image message (using character image as base)
+      final blurredImageMsg = {
+        'id': 'guest-limit-${DateTime.now().millisecondsSinceEpoch}',
+        'conversation_id': conversationId!,
+        'sender_type': 'guest_limit', // Special type for registration prompt
+        'content':
+            characterImage ??
+            '', // Use character's image (will be blurred in UI)
+        'created_at': DateTime.now().toIso8601String(),
+      };
+      messages.add(blurredImageMsg);
+      _scrollToBottom();
+
+      // 2. Save to database
+      await _performSupabaseOperation(() async {
+        await client.from('messages').insert({
+          'conversation_id': conversationId!,
+          'sender_type': 'guest_limit',
+          'content': characterImage ?? '',
+        });
+      });
+
+      debugPrint("✅ Guest limit message added");
+    } catch (e) {
+      debugPrint("❌ Failed to add guest limit message: $e");
     }
   }
 

@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:kraveai/generated/app_colors.dart';
 import 'package:kraveai/generated/assets.dart';
 import 'package:kraveai/services/supabase_service.dart';
+import 'package:kraveai/views/screens/auth_screens/age_verification_screen.dart';
 import 'package:kraveai/views/screens/auth_screens/forget_passord_screen.dart';
 import 'package:kraveai/views/screens/dashboard/dashboard_screen.dart';
 import 'package:kraveai/views/widgets/common_image_view.dart';
@@ -296,6 +297,31 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 30),
+
+                // Continue as Guest Button
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 36.0),
+                  child: MyButton(
+                    onTap: () {
+                      Get.to(() => const AgeVerificationScreen());
+                    },
+                    buttonText: "Continue as Guest",
+                    backgroundColor: Colors.white.withValues(alpha: 0.15),
+                    fontColor: Colors.white,
+                    radius: 12,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                  child: MyText(
+                    text: "Send up to 5 messages without account",
+                    size: 11,
+                    color: Colors.white60,
+                    textAlign: TextAlign.center,
+                  ),
                 ),
                 const SizedBox(height: 30),
                 Row(

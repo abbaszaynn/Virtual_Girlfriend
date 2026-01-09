@@ -53,7 +53,33 @@ class SupabaseService {
   Future<String> getOrCreateCharacter(Character character) async {
     try {
       final user = currentUser;
-      if (user == null) throw Exception("User not logged in");
+
+      // GUEST MODE: Look up character without authentication
+      if (user == null) {
+        debugPrint('🔓 Guest mode: Looking up character ${character.name}');
+
+        // Characters should already exist in the database
+        // We just need to find and return the ID
+        final data = await client
+            .from('characters')
+            .select()
+            .eq('name', character.name)
+            .limit(1)
+            .maybeSingle();
+
+        if (data != null) {
+          debugPrint('✅ Found character for guest: ${data['id']}');
+          return data['id'];
+        } else {
+          debugPrint('❌ Character ${character.name} not found in database');
+          throw Exception(
+            'Character "${character.name}" not found. Please contact support.',
+          );
+        }
+      }
+
+      // AUTHENTICATED USER MODE: Create/update character
+      debugPrint('🔐 Authenticated mode: Getting/creating character');
 
       // 1. Check if Character exists
       final data = await client

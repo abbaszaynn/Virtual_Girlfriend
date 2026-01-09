@@ -3,6 +3,7 @@ import 'package:kraveai/controllers/chat_controller.dart';
 import 'package:kraveai/generated/app_colors.dart';
 import 'package:kraveai/views/screens/chat_screens/widgets/message_bubble.dart';
 import 'package:kraveai/views/screens/chat_screens/widgets/image_message_bubble.dart'; // Add this
+import 'package:kraveai/views/screens/chat_screens/widgets/registration_prompt_bubble.dart'; // Guest limit widget
 import 'package:kraveai/views/widgets/common_image_view.dart';
 import 'package:kraveai/views/widgets/my_text.dart';
 import 'package:flutter/material.dart';
@@ -99,19 +100,25 @@ class _ChatScreenState extends State<ChatScreen> {
           ],
         ),
         actions: [
-          IconButton(
-            onPressed: () {
-              Get.snackbar("Coming Soon", "Voice Calls enabled in Phase 2!");
-            },
-            icon: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
+          // Only show voice call for registered users
+          Obx(() {
+            if (controller.isGuestUser.value) {
+              return const SizedBox.shrink(); // Hide for guests
+            }
+            return IconButton(
+              onPressed: () {
+                Get.snackbar("Coming Soon", "Voice Calls enabled in Phase 2!");
+              },
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.call, color: Colors.white, size: 20),
               ),
-              child: const Icon(Icons.call, color: Colors.white, size: 20),
-            ),
-          ),
+            );
+          }),
           const SizedBox(width: 10),
         ],
       ),
@@ -171,7 +178,15 @@ class _ChatScreenState extends State<ChatScreen> {
                       final isMe = msg['sender_type'] == 'user';
                       final messageId = msg['id'].toString();
 
-                      // 1. Check if Image
+                      // 1. Check if Guest Limit Message (Registration Prompt)
+                      if (msg['sender_type'] == 'guest_limit') {
+                        return RegistrationPromptBubble(
+                          blurredImageUrl: msg['content'] ?? widget.image,
+                          time: _formatTime(msg['created_at']),
+                        );
+                      }
+
+                      // 2. Check if Image
                       if (msg['sender_type'] == 'image') {
                         return ImageMessageBubble(
                           imageUrl: msg['content'] ?? '',
@@ -179,7 +194,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         );
                       }
 
-                      // 2. Text Message
+                      // 3. Text Message
                       return Obx(() {
                         final isPlaying =
                             controller.playingMessageId.value == messageId &&
@@ -217,100 +232,133 @@ class _ChatScreenState extends State<ChatScreen> {
                     top: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                   ),
                 ),
-                child: Row(
+                child: Column(
                   children: [
-                    // Camera Button
-                    InkWell(
-                      onTap: () => controller.requestImage(),
-                      child: Container(
-                        padding: const EdgeInsets.all(10),
-                        margin: const EdgeInsets.only(right: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Obx(
-                          () => controller.isImageGenerating.value
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Icon(
-                                  Icons.camera_alt,
-                                  color: Colors.white70,
-                                  size: 20,
-                                ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(25),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.1),
+                    // Guest Message Counter
+                    Obx(() {
+                      if (controller.isGuestUser.value &&
+                          !controller.guestLimitReached.value) {
+                        final remaining =
+                            5 - controller.guestMessageCount.value;
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: MyText(
+                            text:
+                                "$remaining message${remaining != 1 ? 's' : ''} remaining as guest",
+                            size: 11,
+                            color: remaining <= 2
+                                ? Colors.orange
+                                : Colors.white60,
+                            textAlign: TextAlign.center,
                           ),
-                        ),
-                        child: TextField(
-                          controller: controller.textController,
-                          style: const TextStyle(color: Colors.white),
-                          decoration: const InputDecoration(
-                            hintText: "Type a message...",
-                            hintStyle: TextStyle(color: Colors.white54),
-                            border: InputBorder.none,
-                          ),
-                          onSubmitted: (_) => controller.sendMessage(),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    InkWell(
-                      onTap: () => controller.sendMessage(),
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primary.withValues(alpha: 0.4),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    }),
+
+                    Row(
+                      children: [
+                        // Camera Button - Only for registered users
+                        Obx(() {
+                          if (controller.isGuestUser.value) {
+                            return const SizedBox.shrink(); // Hide for guests
+                          }
+                          return InkWell(
+                            onTap: () => controller.requestImage(),
+                            child: Container(
+                              padding: const EdgeInsets.all(10),
+                              margin: const EdgeInsets.only(right: 8),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Obx(
+                                () => controller.isImageGenerating.value
+                                    ? const SizedBox(
+                                        height: 20,
+                                        width: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : const Icon(
+                                        Icons.camera_alt,
+                                        color: Colors.white70,
+                                        size: 20,
+                                      ),
+                              ),
                             ),
-                          ],
+                          );
+                        }),
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(25),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.1),
+                              ),
+                            ),
+                            child: TextField(
+                              controller: controller.textController,
+                              style: const TextStyle(color: Colors.white),
+                              decoration: const InputDecoration(
+                                hintText: "Type a message...",
+                                hintStyle: TextStyle(color: Colors.white54),
+                                border: InputBorder.none,
+                              ),
+                              onSubmitted: (_) => controller.sendMessage(),
+                            ),
+                          ),
                         ),
-                        child: Obx(
-                          () => controller.isSending.value
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
+                        const SizedBox(width: 12),
+                        InkWell(
+                          onTap: () => controller.sendMessage(),
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.primary.withValues(
+                                    alpha: 0.4,
                                   ),
-                                )
-                              : const Icon(
-                                  Icons.send,
-                                  color: Colors.white,
-                                  size: 20,
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 4),
                                 ),
+                              ],
+                            ),
+                            child: Obx(
+                              () => controller.isSending.value
+                                  ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Icon(
+                                      Icons.send,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+                      ],
+                    ), // Closing bracket for Row
+                  ], // Closing bracket for Column children
+                ), // Closing bracket for Column
+              ), // Closing bracket for Container
+            ], // Closing bracket for the main Column's children
+          ), // Closing bracket for the main Column
+        ), // Closing bracket for the Scaffold body's Padding/Center
+      ), // Closing bracket for Scaffold
+    ); // Closing bracket for build method's return
   }
 
   String _formatTime(String? timestamp) {
