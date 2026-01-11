@@ -4,6 +4,7 @@ import 'package:kraveai/generated/app_colors.dart';
 import 'package:kraveai/generated/assets.dart';
 import 'package:kraveai/services/supabase_service.dart';
 import 'package:kraveai/views/screens/auth_screens/age_verification_screen.dart';
+import 'package:kraveai/views/screens/auth_screens/create_account_screen.dart';
 import 'package:kraveai/views/screens/auth_screens/forget_passord_screen.dart';
 import 'package:kraveai/views/screens/dashboard/dashboard_screen.dart';
 import 'package:kraveai/views/widgets/common_image_view.dart';
@@ -100,10 +101,36 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                CommonImageView(
-                  imagePath: Assets.logo,
-                  height: 80,
-                  fit: BoxFit.cover,
+                // Back Button
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: InkWell(
+                    onTap: () {
+                      Get.back();
+                    },
+                    child: Container(
+                      height: 50,
+                      width: 50,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.grey.withValues(alpha: 0.3),
+                      ),
+                      child: Center(
+                        child: const Icon(
+                          Icons.arrow_back_ios_new_rounded,
+                          color: AppColors.onPrimary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Center(
+                  child: CommonImageView(
+                    imagePath: Assets.logo,
+                    height: 80,
+                    fit: BoxFit.cover,
+                  ),
                 ),
                 const SizedBox(height: 40),
                 Container(
@@ -299,6 +326,52 @@ class _LoginScreenState extends State<LoginScreen> {
                   ],
                 ),
                 const SizedBox(height: 30),
+
+                // Create Account Button (Primary Action)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 36.0),
+                  child: MyButton(
+                    onTap: () {
+                      Get.to(() => const CreateAccountScreen());
+                    },
+                    buttonText: "Create Account",
+                    radius: 12,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                  child: MyText(
+                    text: "New here? Sign up to unlock full features",
+                    size: 11,
+                    color: Colors.white60,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Divider with "or"
+                Row(
+                  children: [
+                    Expanded(
+                      child: Divider(
+                        color: Colors.white.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: MyText(text: "or", size: 12),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Divider(
+                        color: Colors.white.withValues(alpha: 0.2),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
 
                 // Continue as Guest Button
                 Padding(

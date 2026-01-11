@@ -57,13 +57,22 @@ class UnlockPremiumFeaturesScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 20),
 
-                              _featuresDot(text: "Unlimited AI Chats"),
+                              _featuresDot(
+                                text: "Unlimited Messages (Free: 10/day)",
+                              ),
                               const SizedBox(height: 10),
 
                               _featuresDot(text: "Advanced AI Persona"),
                               const SizedBox(height: 10),
 
-                              _featuresDot(text: "SFW + NSFW images"),
+                              _featuresDot(
+                                text: "Unlimited Images (Free: 2/day)",
+                              ),
+                              const SizedBox(height: 10),
+
+                              _featuresDot(
+                                text: "Unlimited Voice Messages (Free: 2/day)",
+                              ),
                               const SizedBox(height: 10),
 
                               _featuresDot(
@@ -74,7 +83,7 @@ class UnlockPremiumFeaturesScreen extends StatelessWidget {
                               _featuresDot(text: "Zero Ads"),
                               const SizedBox(height: 10),
 
-                              _featuresDot(text: "Multiple models"),
+                              _featuresDot(text: "Multiple AI models"),
 
                               const SizedBox(height: 20),
                               Padding(

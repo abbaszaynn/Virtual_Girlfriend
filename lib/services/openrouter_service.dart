@@ -91,7 +91,7 @@ class OpenRouterService {
               'X-Title': 'Kraveai',
             },
             body: jsonEncode({
-              'model': 'cognitivecomputations/dolphin-mixtral-8x22b',
+              'model': 'mistralai/mistral-7b-instruct',
               'messages': messages,
             }),
           )

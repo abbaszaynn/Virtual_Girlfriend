@@ -51,39 +51,54 @@ class BasicInformationWidget extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: List.generate(genders.length, (index) {
                       return Expanded(
-                        // Placeholder for future gender logic if needed
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 6),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: BackdropFilter(
-                              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                              child: Container(
-                                height: 50,
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  color: index == 0
-                                      ? Colors.white.withValues(alpha: 0.18)
-                                      : Colors.white.withValues(
-                                          alpha: 0.05,
-                                        ), // Force Female for now or bind later
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: index == 0
-                                        ? AppColors.secondary
-                                        : Colors.white.withValues(alpha: 0.25),
-                                    width: 1.4,
+                        child: Obx(() {
+                          final isSelected =
+                              controller.gender.value == genders[index];
+                          return GestureDetector(
+                            onTap: () {
+                              controller.gender.value = genders[index];
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: BackdropFilter(
+                                  filter: ImageFilter.blur(
+                                    sigmaX: 12,
+                                    sigmaY: 12,
                                   ),
-                                ),
-                                child: MyText(
-                                  text: genders[index],
-                                  size: 14,
-                                  textAlign: TextAlign.center,
+                                  child: Container(
+                                    height: 50,
+                                    alignment: Alignment.center,
+                                    decoration: BoxDecoration(
+                                      color: isSelected
+                                          ? Colors.white.withValues(alpha: 0.18)
+                                          : Colors.white.withValues(
+                                              alpha: 0.05,
+                                            ),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: isSelected
+                                            ? AppColors.secondary
+                                            : Colors.white.withValues(
+                                                alpha: 0.25,
+                                              ),
+                                        width: 1.4,
+                                      ),
+                                    ),
+                                    child: MyText(
+                                      text: genders[index],
+                                      size: 14,
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        ),
+                          );
+                        }),
                       );
                     }),
                   ),

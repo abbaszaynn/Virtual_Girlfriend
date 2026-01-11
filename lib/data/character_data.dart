@@ -6,7 +6,7 @@ List<Character> characterList = [
     id: 'maya_001',
     name: "Maya",
     age: "25",
-    imagePath: Assets.maya,
+    imagePath: Assets.image1,
     vibe: "Flirty",
     description:
         "Maya is your bold, affectionate girlfriend who loves to tease and be naughty. She's always ready for a fun time.",
@@ -20,7 +20,7 @@ List<Character> characterList = [
     id: 'elena_002',
     name: "Elena",
     age: "30",
-    imagePath: Assets.elena,
+    imagePath: Assets.image2,
     vibe: "Romantic",
     description:
         "Elena is elegant, deep, and hopelessly romantic. She craves emotional connection and poetic moments.",
@@ -35,7 +35,7 @@ List<Character> characterList = [
     id: 'aria_003',
     name: "Aria",
     age: "22",
-    imagePath: Assets.aria,
+    imagePath: Assets.image3,
     vibe: "Chill",
     description:
         "Aria is laid-back, funny, and your best friend who turned into something more. She loves gaming and hanging out.",
@@ -49,7 +49,7 @@ List<Character> characterList = [
     id: 'sofia_004',
     name: "Sofia",
     age: "28",
-    imagePath: Assets.sofia,
+    imagePath: Assets.image4,
     vibe: "Adventurous",
     description:
         "Sofia is energetic, outdoorsy, and always looking for the next thrill. She's spontaneous and keeps you on your toes.",

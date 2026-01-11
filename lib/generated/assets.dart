@@ -13,4 +13,24 @@ class Assets {
   static const String elena = 'images/elena.png';
   static const String aria = 'images/aria.png';
   static const String sofia = 'images/sofia.png';
+
+  // New numbered preference images
+  static const String image1 = 'images/1.webp';
+  static const String image2 = 'images/2.jpg';
+  static const String image3 = 'images/3.jfif';
+  static const String image4 = 'images/4.jfif';
+  static const String image5 = 'images/5.jfif';
+  static const String image6 = 'images/6.jfif';
+  static const String image7 = 'images/7.jfif';
+
+  // List of all preference images
+  static const List<String> preferenceImages = [
+    image1,
+    image2,
+    image3,
+    image4,
+    image5,
+    image6,
+    image7,
+  ];
 }

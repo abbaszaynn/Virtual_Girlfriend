@@ -4,6 +4,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:kraveai/services/supabase_service.dart';
 import 'package:kraveai/services/guest_service.dart';
 import 'package:kraveai/services/openrouter_service.dart';
+import 'package:kraveai/services/usage_tracking_service.dart';
 // import 'package:kraveai/services/bytez_image_service.dart';
 import 'package:kraveai/services/replicate_service.dart';
 import 'package:flutter/material.dart';
@@ -27,16 +28,27 @@ class ChatController extends GetxController {
   final RxBool guestLimitReached = false.obs;
   final GuestService _guestService = GuestService();
 
-  // Image Generation
+  // Image Generation (Legacy - now using usage tracking)
   final RxInt freeImageCount = 0.obs;
   final int maxFreeImages = 5;
   late SharedPreferences _prefs;
+
+  // Usage Tracking for Registered Users
+  final UsageTrackingService _usageService = UsageTrackingService();
+  final RxBool isPremium = false.obs;
+  final RxInt dailyMessageCount = 0.obs;
+  final RxInt dailyImageCount = 0.obs;
+  final RxInt dailyVoiceCount = 0.obs;
+  final RxInt messageLimit = 10.obs;
+  final RxInt imageLimit = 2.obs;
+  final RxInt voiceLimit = 2.obs;
 
   @override
   void onInit() {
     super.onInit();
     _initPrefs();
     _setupAudioListener();
+    _loadUsageStats();
   }
 
   void _setupAudioListener() {
@@ -52,6 +64,29 @@ class ChatController extends GetxController {
   Future<void> _initPrefs() async {
     _prefs = await SharedPreferences.getInstance();
     freeImageCount.value = _prefs.getInt('free_image_count') ?? 0;
+  }
+
+  /// Load usage statistics for registered users
+  Future<void> _loadUsageStats() async {
+    // Only for registered users
+    if (client.auth.currentUser == null) return;
+
+    try {
+      // Check premium status
+      isPremium.value = await _usageService.isPremiumUser();
+
+      // Get current usage
+      final usage = await _usageService.getCurrentUsage();
+      dailyMessageCount.value = usage['messages'] ?? 0;
+      dailyImageCount.value = usage['images'] ?? 0;
+      dailyVoiceCount.value = usage['voice'] ?? 0;
+
+      debugPrint(
+        "✅ Usage stats loaded - Messages: ${dailyMessageCount.value}/10, Images: ${dailyImageCount.value}/2, Voice: ${dailyVoiceCount.value}/2, Premium: ${isPremium.value}",
+      );
+    } catch (e) {
+      debugPrint("ERROR loading usage stats: $e");
+    }
   }
 
   // Audio
@@ -244,6 +279,20 @@ class ChatController extends GetxController {
       return;
     }
 
+    // Check voice limit for registered non-premium users
+    if (!isGuestUser.value && !isPremium.value) {
+      final canUse = await _usageService.canUseVoice();
+      if (!canUse) {
+        _showPremiumUpgradeDialog(
+          title: "Daily Voice Limit Reached",
+          message:
+              "You've used 2 voice messages today. Upgrade to Premium for unlimited voice messages!",
+          feature: "voice",
+        );
+        return;
+      }
+    }
+
     if (voiceId == null || voiceId!.isEmpty) {
       _showError("No voice configured for this character");
       return;
@@ -286,6 +335,16 @@ class ChatController extends GetxController {
           await audioPlayer.play();
 
           debugPrint("✅ Audio playback started successfully");
+
+          // Increment voice count for registered users (after successful play)
+          if (!isGuestUser.value && !isPremium.value) {
+            await _usageService.incrementVoiceCount();
+            dailyVoiceCount.value =
+                (await _usageService.getCurrentUsage())['voice'] ?? 0;
+            debugPrint(
+              "DEBUG: Voice count incremented: ${dailyVoiceCount.value}/2",
+            );
+          }
         } catch (e) {
           debugPrint("❌ Audio player error: $e");
           playingMessageId.value = "";
@@ -364,40 +423,24 @@ class ChatController extends GetxController {
     }
 
     // 2. CHECK REGULAR LIMIT (for registered users)
-    if (!isGuestUser.value && messages.length >= 10) {
-      Get.dialog(
-        AlertDialog(
-          backgroundColor: const Color(0xFF1A1A1A),
-          title: const Text(
-            "Limit Reached",
-            style: TextStyle(color: Colors.white),
-          ),
-          content: const Text(
-            "You have reached the free limit of 10 messages. Please subscribe to continue chatting with Maya.",
-            style: TextStyle(color: Colors.white70),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Get.back(),
-              child: const Text("Cancel"),
-            ),
-            TextButton(
-              onPressed: () {
-                Get.back();
-                Get.snackbar(
-                  "Coming Soon",
-                  "Subscription flow will be added soon!",
-                );
-              },
-              child: const Text(
-                "Subscribe",
-                style: TextStyle(color: Colors.red),
-              ),
-            ),
-          ],
-        ),
-      );
-      return;
+    if (!isGuestUser.value) {
+      // Check if premium user
+      final premium = await _usageService.isPremiumUser();
+      isPremium.value = premium;
+
+      if (!premium) {
+        // Check daily message limit for non-premium users
+        final canSend = await _usageService.canSendMessage();
+        if (!canSend) {
+          _showPremiumUpgradeDialog(
+            title: "Daily Message Limit Reached",
+            message:
+                "You've sent 10 messages today. Upgrade to Premium for unlimited messages!",
+            feature: "messages",
+          );
+          return;
+        }
+      }
     }
 
     debugPrint("DEBUG: Sending message: $text");
@@ -434,6 +477,14 @@ class ChatController extends GetxController {
         );
         debugPrint(
           "DEBUG: Guest message count after send: ${guestMessageCount.value}/5",
+        );
+      } else {
+        // Increment registered user message count
+        await _usageService.incrementMessageCount();
+        dailyMessageCount.value =
+            (await _usageService.getCurrentUsage())['messages'] ?? 0;
+        debugPrint(
+          "DEBUG: Registered user message count: ${dailyMessageCount.value}/10",
         );
       }
 
@@ -544,6 +595,49 @@ class ChatController extends GetxController {
     });
   }
 
+  // Show premium upgrade dialog
+  void _showPremiumUpgradeDialog({
+    required String title,
+    required String message,
+    required String feature,
+  }) {
+    Get.dialog(
+      AlertDialog(
+        backgroundColor: const Color(0xFF1A1A1A),
+        title: Row(
+          children: [
+            const Icon(Icons.workspace_premium, color: Colors.amber, size: 28),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(title, style: const TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+        content: Text(message, style: const TextStyle(color: Colors.white70)),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text("Maybe Later"),
+          ),
+          TextButton(
+            onPressed: () {
+              Get.back();
+              // Navigate to premium features screen
+              Get.toNamed('/premium'); // TODO: Update with your actual route
+            },
+            child: const Text(
+              "Upgrade to Premium",
+              style: TextStyle(
+                color: Colors.amber,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // Image Generation Method
   Future<void> requestImage() async {
     // 0. Block image generation for guest users
@@ -578,42 +672,18 @@ class ChatController extends GetxController {
       return;
     }
 
-    // 1. Check Free Limit
-    if (freeImageCount.value >= maxFreeImages) {
-      // Show Subscription Dialog
-      Get.dialog(
-        AlertDialog(
-          backgroundColor: const Color(0xFF1A1A1A),
-          title: const Text(
-            "Limit Reached",
-            style: TextStyle(color: Colors.white),
-          ),
-          content: const Text(
-            "You've used your 5 free photos! Subscribe to unveil clear photos and get unlimited access.",
-            style: TextStyle(color: Colors.white70),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Get.back(),
-              child: const Text("Cancel"),
-            ),
-            TextButton(
-              onPressed: () {
-                Get.back();
-                Get.snackbar(
-                  "Coming Soon",
-                  "Subscription flow will be added soon!",
-                );
-              },
-              child: const Text(
-                "Subscribe",
-                style: TextStyle(color: Colors.red),
-              ),
-            ),
-          ],
-        ),
-      );
-      return;
+    // 1. Check Daily Image Limit for non-premium users
+    if (!isPremium.value) {
+      final canGenerate = await _usageService.canGenerateImage();
+      if (!canGenerate) {
+        _showPremiumUpgradeDialog(
+          title: "Daily Image Limit Reached",
+          message:
+              "You've generated 2 images today. Upgrade to Premium for unlimited images!",
+          feature: "images",
+        );
+        return;
+      }
     }
 
     isImageGenerating.value = true;
@@ -678,7 +748,17 @@ class ChatController extends GetxController {
           });
         });
 
-        // 6. Increment Count
+        // 6. Increment Image Count
+        if (!isPremium.value) {
+          await _usageService.incrementImageCount();
+          dailyImageCount.value =
+              (await _usageService.getCurrentUsage())['images'] ?? 0;
+          debugPrint(
+            "DEBUG: Image count incremented: ${dailyImageCount.value}/2",
+          );
+        }
+
+        // Legacy: Also keep track of old free image count for backward compatibility
         freeImageCount.value++;
         await _prefs.setInt('free_image_count', freeImageCount.value);
 

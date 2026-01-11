@@ -9,30 +9,60 @@ class ChoiceVoiceWidget extends StatelessWidget {
   ChoiceVoiceWidget({super.key});
 
   final CreateAiGfController controller = Get.find<CreateAiGfController>();
-  final List<Map<String, dynamic>> voiceList = [
+
+  // Female voices from ElevenLabs
+  final List<Map<String, dynamic>> femaleVoices = [
     {
       "icon": Icons.mic,
-      "title": "Gentle",
-      "subtitle": "Confident",
-      "id": "gentle_voice_id",
+      "title": "Rachel",
+      "subtitle": "Calm & Clear",
+      "id": "21m00Tcm4TlvDq8ikWAM", // Rachel - Most popular female voice
     },
     {
       "icon": Icons.mic,
-      "title": "Soft",
-      "subtitle": "Gentle",
-      "id": "soft_voice_id",
+      "title": "Bella",
+      "subtitle": "Soft & Gentle",
+      "id": "EXAVITQu4vr4xnSDxMaL", // Bella - Young, soft voice
     },
     {
       "icon": Icons.mic,
-      "title": "Bold",
-      "subtitle": "Smooth",
-      "id": "bold_voice_id",
+      "title": "Elli",
+      "subtitle": "Youthful & Energetic",
+      "id": "MF3mGyEYCl7XYWbV9V6O", // Elli - Youthful female
     },
     {
       "icon": Icons.mic,
-      "title": "Calm",
-      "subtitle": "Soft",
-      "id": "calm_voice_id",
+      "title": "Charlotte",
+      "subtitle": "Seductive & Mature",
+      "id": "XB0fDUnXU5powFXDhCwa", // Charlotte - Seductive voice
+    },
+  ];
+
+  // Male voices from ElevenLabs
+  final List<Map<String, dynamic>> maleVoices = [
+    {
+      "icon": Icons.mic,
+      "title": "Antoni",
+      "subtitle": "Well-Rounded & Warm",
+      "id": "ErXwobaYiN019PkySvjV", // Antoni - Popular male voice
+    },
+    {
+      "icon": Icons.mic,
+      "title": "Josh",
+      "subtitle": "Deep & Young",
+      "id": "TxGEqnHWrfWFTfGW9XjX", // Josh - Young male
+    },
+    {
+      "icon": Icons.mic,
+      "title": "Arnold",
+      "subtitle": "Crisp & Clear",
+      "id": "VR6AewLTigWG4xSOukaG", // Arnold - Crisp, clear
+    },
+    {
+      "icon": Icons.mic,
+      "title": "Sam",
+      "subtitle": "Raspy & Dynamic",
+      "id": "yoZ06aMxZJJ28mfd3POQ", // Sam - Dynamic voice
     },
   ];
 
@@ -55,11 +85,15 @@ class ChoiceVoiceWidget extends StatelessWidget {
                 children: [
                   MyText(text: "Choose Voice", size: 18),
                   const SizedBox(height: 14),
-                  Obx(
-                    () => Column(
+                  Obx(() {
+                    // Filter voices based on gender
+                    final voiceList = controller.gender.value == "Male"
+                        ? maleVoices
+                        : femaleVoices; // Default to female for Non-binary
+
+                    return Column(
                       children: List.generate(voiceList.length, (index) {
                         final item = voiceList[index];
-                        // Just checking index equality for simplicity, or could check ID
                         bool isSelected =
                             controller.selectedVoiceId.value == item["id"];
                         return Padding(
@@ -74,8 +108,8 @@ class ChoiceVoiceWidget extends StatelessWidget {
                           ),
                         );
                       }),
-                    ),
-                  ),
+                    );
+                  }),
                 ],
               ),
             ),

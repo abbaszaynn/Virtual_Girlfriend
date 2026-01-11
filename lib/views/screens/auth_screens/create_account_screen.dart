@@ -126,10 +126,36 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                CommonImageView(
-                  imagePath: Assets.logo,
-                  height: 80,
-                  fit: BoxFit.cover,
+                // Back Button
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: InkWell(
+                    onTap: () {
+                      Get.back();
+                    },
+                    child: Container(
+                      height: 50,
+                      width: 50,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.grey.withValues(alpha: 0.3),
+                      ),
+                      child: Center(
+                        child: const Icon(
+                          Icons.arrow_back_ios_new_rounded,
+                          color: AppColors.onPrimary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Center(
+                  child: CommonImageView(
+                    imagePath: Assets.logo,
+                    height: 80,
+                    fit: BoxFit.cover,
+                  ),
                 ),
                 const SizedBox(height: 40),
                 Container(

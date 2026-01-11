@@ -4,6 +4,10 @@ import 'package:kraveai/generated/app_colors.dart';
 import 'package:kraveai/views/screens/chat_screens/widgets/message_bubble.dart';
 import 'package:kraveai/views/screens/chat_screens/widgets/image_message_bubble.dart'; // Add this
 import 'package:kraveai/views/screens/chat_screens/widgets/registration_prompt_bubble.dart'; // Guest limit widget
+import 'package:kraveai/views/screens/chat_screens/widgets/usage_indicator_widget.dart'; // Usage indicator
+import 'package:kraveai/views/screens/home/unlock_premium_features_screen.dart'; // Premium screen
+import 'package:kraveai/services/supabase_service.dart'; // For logout
+import 'package:kraveai/views/screens/auth_screens/login_screen.dart'; // For logout navigation
 import 'package:kraveai/views/widgets/common_image_view.dart';
 import 'package:kraveai/views/widgets/my_text.dart';
 import 'package:flutter/material.dart';
@@ -116,6 +120,95 @@ class _ChatScreenState extends State<ChatScreen> {
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.call, color: Colors.white, size: 20),
+              ),
+            );
+          }),
+          // Premium Upgrade Button for non-premium registered users
+          Obx(() {
+            if (controller.isGuestUser.value || controller.isPremium.value) {
+              return const SizedBox.shrink(); // Hide for guests and premium
+            }
+            return IconButton(
+              onPressed: () {
+                Get.to(() => const UnlockPremiumFeaturesScreen());
+              },
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+                  ),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.workspace_premium,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+            );
+          }),
+          // Logout Button for registered users
+          Obx(() {
+            if (controller.isGuestUser.value) {
+              return const SizedBox.shrink(); // Hide for guests
+            }
+            return IconButton(
+              onPressed: () {
+                // Show confirmation dialog
+                Get.dialog(
+                  AlertDialog(
+                    backgroundColor: const Color(0xFF1A1A1A),
+                    title: const Text(
+                      "Logout",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    content: const Text(
+                      "Are you sure you want to logout?",
+                      style: TextStyle(color: Colors.white70),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Get.back(),
+                        child: const Text("Cancel"),
+                      ),
+                      TextButton(
+                        onPressed: () async {
+                          Get.back(); // Close dialog
+                          await SupabaseService().signOut();
+                          // Navigate to login screen and clear navigation stack
+                          Get.offAll(() => const LoginScreen());
+                          Get.snackbar(
+                            "Success",
+                            "You have been logged out",
+                            backgroundColor: Colors.green.withOpacity(0.8),
+                            colorText: Colors.white,
+                          );
+                        },
+                        child: const Text(
+                          "Logout",
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.red.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.red.withValues(alpha: 0.3),
+                    width: 1.2,
+                  ),
+                ),
+                child: const Icon(
+                  Icons.logout,
+                  color: Colors.redAccent,
+                  size: 20,
+                ),
               ),
             );
           }),
@@ -234,6 +327,8 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
                 child: Column(
                   children: [
+                    // Usage Indicator for registered users
+                    const UsageIndicatorWidget(),
                     // Guest Message Counter
                     Obx(() {
                       if (controller.isGuestUser.value &&

@@ -2,6 +2,10 @@ import 'dart:ui';
 
 import 'package:kraveai/generated/app_colors.dart';
 import 'package:kraveai/generated/assets.dart';
+import 'package:kraveai/services/guest_service.dart';
+import 'package:kraveai/services/supabase_service.dart';
+import 'package:kraveai/views/screens/auth_screens/create_account_screen.dart';
+import 'package:kraveai/views/screens/auth_screens/login_screen.dart'; // For logout navigation
 import 'package:kraveai/views/screens/categories_screens/more_categories_screen.dart';
 import 'package:kraveai/views/screens/chat_screens/inbox_screen.dart';
 import 'package:kraveai/views/screens/create_ai_gf_screens/create_ai_gf_screen.dart';
@@ -26,6 +30,65 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final GuestService _guestService = GuestService();
+  final SupabaseService _supabaseService = SupabaseService();
+  List<Character> displayCharacterList = [];
+  bool isLoadingCharacters = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCharacters();
+  }
+
+  Future<void> _loadCharacters() async {
+    try {
+      // Start with default characters
+      displayCharacterList = List.from(characterList);
+
+      // If user is logged in (not guest), fetch their custom characters
+      if (!_guestService.isGuestMode) {
+        final userId = _supabaseService.client.auth.currentUser?.id;
+        if (userId != null) {
+          final response = await _supabaseService.client
+              .from('characters')
+              .select()
+              .eq('user_id', userId);
+
+          // Convert database records to Character objects
+          for (var charData in response) {
+            displayCharacterList.add(
+              Character(
+                id: charData['id'].toString(),
+                name: charData['name'],
+                age: charData['description']?.split('yo')[0] ?? '25',
+                imagePath: charData['image_url'] ?? Assets.maya,
+                vibe: 'Custom',
+                description: charData['description'] ?? '',
+                systemPrompt: charData['system_prompt'] ?? '',
+                voiceId: charData['voice_id'] ?? '21m00Tcm4TlvDq8ikWAM',
+                imagePromptDescription: charData['description'] ?? '',
+              ),
+            );
+          }
+        }
+      }
+
+      if (mounted) {
+        setState(() {
+          isLoadingCharacters = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading characters: $e');
+      if (mounted) {
+        setState(() {
+          isLoadingCharacters = false;
+        });
+      }
+    }
+  }
+
   final List<String> tags = [
     "#Flirty",
     "#Romantic",
@@ -142,6 +205,82 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                         ),
+
+                        const SizedBox(width: 10),
+
+                        // Logout icon (only for registered users)
+                        if (!_guestService.isGuestMode)
+                          InkWell(
+                            onTap: () async {
+                              // Show confirmation dialog
+                              Get.dialog(
+                                AlertDialog(
+                                  backgroundColor: const Color(0xFF1A1A1A),
+                                  title: const Text(
+                                    "Logout",
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                  content: const Text(
+                                    "Are you sure you want to logout?",
+                                    style: TextStyle(color: Colors.white70),
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Get.back(),
+                                      child: const Text("Cancel"),
+                                    ),
+                                    TextButton(
+                                      onPressed: () async {
+                                        Get.back(); // Close dialog
+                                        await _supabaseService.signOut();
+                                        // Navigate to login screen and clear navigation stack
+                                        Get.offAll(() => const LoginScreen());
+                                        Get.snackbar(
+                                          "Success",
+                                          "You have been logged out",
+                                          backgroundColor: Colors.green
+                                              .withOpacity(0.8),
+                                          colorText: Colors.white,
+                                        );
+                                      },
+                                      child: const Text(
+                                        "Logout",
+                                        style: TextStyle(color: Colors.red),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(15),
+                              child: BackdropFilter(
+                                filter: ImageFilter.blur(
+                                  sigmaX: 15,
+                                  sigmaY: 15,
+                                ),
+                                child: Container(
+                                  height: 30,
+                                  width: 30,
+                                  decoration: BoxDecoration(
+                                    color: Colors.red.withValues(alpha: 0.2),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: Colors.red.withValues(alpha: 0.3),
+                                      width: 1.2,
+                                    ),
+                                  ),
+                                  child: const Center(
+                                    child: Icon(
+                                      Icons.logout,
+                                      size: 16,
+                                      color: Colors.redAccent,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                   ],
@@ -204,30 +343,56 @@ class _HomeScreenState extends State<HomeScreen> {
                               const SizedBox(height: 10),
 
                               InkWell(
-                                onTap: () {
-                                  Get.to(() => CreateAiGfScreen());
-                                },
+                                onTap: _guestService.isGuestMode
+                                    ? () {
+                                        // Show registration prompt for guests
+                                        Get.snackbar(
+                                          "Registration Required",
+                                          "Please register to create your own AI girlfriend",
+                                          backgroundColor: Colors.orange
+                                              .withOpacity(0.8),
+                                          colorText: Colors.white,
+                                        );
+                                        Get.to(() => CreateAccountScreen());
+                                      }
+                                    : () {
+                                        Get.to(() => CreateAiGfScreen());
+                                      },
                                 child: Container(
                                   height: 30,
                                   width: 140,
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(6),
-                                    color: AppColors.secondary,
+                                    color: _guestService.isGuestMode
+                                        ? Colors.grey.shade700
+                                        : AppColors.secondary,
                                   ),
                                   child: Padding(
                                     padding: const EdgeInsets.all(8.0),
                                     child: Row(
                                       children: [
-                                        CommonImageView(
-                                          imagePath: Assets.aiIcon,
-                                          height: 20,
-                                        ),
+                                        _guestService.isGuestMode
+                                            ? Icon(
+                                                Icons.lock,
+                                                size: 16,
+                                                color: Colors.white60,
+                                              )
+                                            : CommonImageView(
+                                                imagePath: Assets.aiIcon,
+                                                height: 20,
+                                              ),
                                         const SizedBox(width: 6),
-                                        MyText(
-                                          text: "Create AI Girlfriend",
-                                          size: 10,
-                                          weight: FontWeight.w600,
-                                          color: AppColors.primary,
+                                        Expanded(
+                                          child: MyText(
+                                            text: _guestService.isGuestMode
+                                                ? "Register to Create"
+                                                : "Create AI Girlfriend",
+                                            size: 9,
+                                            weight: FontWeight.w600,
+                                            color: _guestService.isGuestMode
+                                                ? Colors.white60
+                                                : AppColors.primary,
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -332,38 +497,36 @@ class _HomeScreenState extends State<HomeScreen> {
                   emoji: "💋",
                 ),
                 const SizedBox(height: 20),
-                GridView.builder(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 15,
-                    mainAxisSpacing: 15,
-                    childAspectRatio: 0.9,
-                  ),
-                  itemCount: characterList.length,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemBuilder: (context, index) {
-                    final Character character = characterList[index];
-                    return HomeCard(
-                      image: character.imagePath,
-                      // Previous design had "Flirty", "Romantic" etc as title, and Age.
-                      // Wait, previous design: title: "Flirty", age: "25".
-                      // Let's use Vibe as Title to match "Choose Your Vibe" header, or Name?
-                      // User request: "use diffterent names... first one will remain maya".
-                      // If I show "Flirty" it hides the name.
-                      // Let's show Name in the card if possible, or Vibe.
-                      // HomeCard has `title` implementation.
-                      // Let's stick to Vibe as the big text if that's what the design was, OR better, show Name.
-                      // "replace these pictures... use diffterent names" -> Implies names are visible.
-                      // Let's use Name as Title.
-                      title: character.name,
-                      age: character.age,
-                      ontap: () {
-                        Get.to(() => DetailScreen(character: character));
-                      },
-                    );
-                  },
-                ),
+                isLoadingCharacters
+                    ? Center(
+                        child: CircularProgressIndicator(
+                          color: AppColors.secondary,
+                        ),
+                      )
+                    : GridView.builder(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 15,
+                              mainAxisSpacing: 15,
+                              childAspectRatio: 0.9,
+                            ),
+                        itemCount: displayCharacterList.length,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemBuilder: (context, index) {
+                          final Character character =
+                              displayCharacterList[index];
+                          return HomeCard(
+                            image: character.imagePath,
+                            title: character.name,
+                            age: character.age,
+                            ontap: () {
+                              Get.to(() => DetailScreen(character: character));
+                            },
+                          );
+                        },
+                      ),
                 Padding(
                   padding: const EdgeInsets.all(20.0),
                   child: MyBorderButton(

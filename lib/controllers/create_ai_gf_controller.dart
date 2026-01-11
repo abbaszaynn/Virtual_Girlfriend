@@ -10,9 +10,11 @@ class CreateAiGfController extends GetxController {
 
   // Basic Info
   final nameController = TextEditingController();
+  final gender = "Female".obs; // Female, Male, Non-binary
   final age = 18.0.obs; // Slider usually returns double
   final bodyType = "Slim".obs;
   final ethnicity = "Caucasian".obs;
+  final selectedPreferenceImage = Assets.image1.obs; // Default to first image
 
   // Personality
   final personalityTraits = <String>[].obs;
@@ -90,11 +92,12 @@ class CreateAiGfController extends GetxController {
             'description':
                 "${age.value.toInt()}yo ${ethnicity.value} ${bodyType.value}",
             'system_prompt': systemPrompt,
-            'image_url':
-                Assets.maya, // Default for now, Phase 2 will generate this
+            'image_url': selectedPreferenceImage.value,
             'voice_id': selectedVoiceId.value.isNotEmpty
                 ? selectedVoiceId.value
-                : 'default_voice_id',
+                : (gender.value == 'Male'
+                      ? 'ErXwobaYiN019PkySvjV' // Antoni - Male default
+                      : '21m00Tcm4TlvDq8ikWAM'), // Rachel - Female default
           })
           .select()
           .single();
@@ -108,12 +111,11 @@ class CreateAiGfController extends GetxController {
         colorText: Colors.white,
       );
 
-      // Navigate to Chat
-      Get.off(
+      Get.to(
         () => ChatScreen(
           characterId: characterId,
           name: name,
-          image: Assets.maya,
+          image: selectedPreferenceImage.value,
         ),
       );
     } catch (e) {

@@ -1,6 +1,7 @@
 import 'package:kraveai/controllers/create_ai_gf_controller.dart';
 import 'package:kraveai/generated/app_colors.dart';
 import 'package:kraveai/generated/assets.dart';
+import 'package:kraveai/views/screens/create_ai_gf_screens/widgets/appearance_preference_widget.dart';
 import 'package:kraveai/views/screens/create_ai_gf_screens/widgets/advanced_settings_widget.dart';
 import 'package:kraveai/views/screens/create_ai_gf_screens/widgets/basic_information_widget.dart';
 import 'package:kraveai/views/screens/create_ai_gf_screens/widgets/choice_voice_widget.dart';
@@ -77,6 +78,9 @@ class _CreateAiGfScreenState extends State<CreateAiGfScreen> {
                 const SizedBox(height: 20),
 
                 BasicInformationWidget(),
+                const SizedBox(height: 20),
+
+                AppearancePreferenceWidget(),
                 const SizedBox(height: 20),
 
                 PersonalityBuilderWidget(),
