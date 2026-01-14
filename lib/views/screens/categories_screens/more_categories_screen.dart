@@ -2,7 +2,6 @@ import 'package:kraveai/generated/app_colors.dart';
 import 'package:kraveai/views/widgets/categories_card.dart';
 import 'package:kraveai/views/widgets/my_text.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
 class MoreCategoriesScreen extends StatelessWidget {
   const MoreCategoriesScreen({super.key});
@@ -39,7 +38,7 @@ class MoreCategoriesScreen extends StatelessWidget {
               Row(
                 children: [
                   InkWell(
-                    onTap: () => Get.back(),
+                    onTap: () => Navigator.of(context).pop(),
                     child: Icon(Icons.arrow_back, color: AppColors.onPrimary),
                   ),
                   const SizedBox(width: 16),

@@ -56,7 +56,7 @@ class _DetailScreenState extends State<DetailScreen> {
                   children: [
                     InkWell(
                       onTap: () {
-                        Get.back();
+                        Navigator.of(context).pop();
                       },
                       child: Icon(Icons.arrow_back, color: AppColors.onPrimary),
                     ),
@@ -247,7 +247,7 @@ class _DetailScreenState extends State<DetailScreen> {
                         ),
                         child: MyButton(
                           onTap: () {
-                            Get.back(); // Or navigate to grid
+                            Navigator.of(context).pop(); // Or navigate to grid
                           },
                           buttonText: "View More Models",
                           radius: 12,

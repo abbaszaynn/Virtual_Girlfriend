@@ -2,7 +2,6 @@ import 'package:kraveai/generated/app_colors.dart';
 import 'package:kraveai/views/screens/terms_condition_screens/widgets/faqs_widget.dart';
 import 'package:kraveai/views/widgets/my_text.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
 class TermsConditionsScreen extends StatelessWidget {
   TermsConditionsScreen({super.key});
@@ -67,7 +66,7 @@ class TermsConditionsScreen extends StatelessWidget {
                   children: [
                     InkWell(
                       onTap: () {
-                        Get.back();
+                        Navigator.of(context).pop();
                       },
                       child: Icon(Icons.arrow_back, color: AppColors.onPrimary),
                     ),

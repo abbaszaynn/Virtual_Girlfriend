@@ -106,7 +106,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   alignment: Alignment.centerLeft,
                   child: InkWell(
                     onTap: () {
-                      Get.back();
+                      Navigator.of(context).pop();
                     },
                     child: Container(
                       height: 50,

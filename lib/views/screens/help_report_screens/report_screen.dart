@@ -5,7 +5,6 @@ import 'package:kraveai/views/widgets/my_button.dart';
 import 'package:kraveai/views/widgets/my_text.dart';
 import 'package:kraveai/views/widgets/my_text_field.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
 class ReportScreen extends StatefulWidget {
   const ReportScreen({super.key});
@@ -38,7 +37,7 @@ class _ReportScreenState extends State<ReportScreen> {
                   children: [
                     InkWell(
                       onTap: () {
-                        Get.back();
+                        Navigator.of(context).pop();
                       },
                       child: Icon(Icons.arrow_back, color: AppColors.onPrimary),
                     ),

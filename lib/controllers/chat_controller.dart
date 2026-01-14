@@ -616,14 +616,18 @@ class ChatController extends GetxController {
         content: Text(message, style: const TextStyle(color: Colors.white70)),
         actions: [
           TextButton(
-            onPressed: () => Get.back(),
+            onPressed: () {
+              if (Get.isDialogOpen == true) {
+                Get.back();
+              }
+            },
             child: const Text("Maybe Later"),
           ),
           TextButton(
             onPressed: () {
-              Get.back();
-              // Navigate to premium features screen
-              Get.toNamed('/premium'); // TODO: Update with your actual route
+              if (Get.isDialogOpen == true) {
+                Get.back();
+              }
             },
             child: const Text(
               "Upgrade to Premium",

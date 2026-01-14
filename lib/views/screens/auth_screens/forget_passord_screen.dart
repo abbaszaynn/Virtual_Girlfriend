@@ -24,7 +24,7 @@ class ForgetPassordScreen extends StatelessWidget {
             children: [
               InkWell(
                 onTap: () {
-                  Get.back();
+                  Navigator.of(context).pop();
                 },
                 child: Container(
                   height: 50,

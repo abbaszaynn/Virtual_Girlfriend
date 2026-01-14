@@ -48,7 +48,7 @@ class _CreateAiGfScreenState extends State<CreateAiGfScreen> {
                   children: [
                     InkWell(
                       onTap: () {
-                        Get.back();
+                        Navigator.of(context).pop();
                       },
                       child: Icon(Icons.arrow_back, color: AppColors.onPrimary),
                     ),
