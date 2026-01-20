@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart';
 import 'package:kraveai/models/character_model.dart';
+import 'package:kraveai/models/user_profile_model.dart';
 
 class SupabaseService {
   static final SupabaseService _instance = SupabaseService._internal();
@@ -121,6 +122,83 @@ class SupabaseService {
     } catch (e) {
       debugPrint("Error getting/creating ${character.name}: $e");
       rethrow;
+    }
+  }
+
+  // ==================== USER PROFILE METHODS ====================
+
+  /// Get current user's profile from database
+  Future<UserProfile?> getUserProfile() async {
+    try {
+      final user = currentUser;
+      if (user == null) {
+        debugPrint('No authenticated user');
+        return null;
+      }
+
+      final response = await client
+          .from('user_profiles')
+          .select()
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+      if (response == null) {
+        debugPrint('No profile found for user ${user.id}');
+        return null;
+      }
+
+      return UserProfile.fromJson(response);
+    } catch (e) {
+      debugPrint('Error getting user profile: $e');
+      return null;
+    }
+  }
+
+  /// Create profile for new user
+  Future<UserProfile?> createUserProfile({
+    required String userId,
+    String? displayName,
+    String? avatarUrl,
+  }) async {
+    try {
+      final response = await client
+          .from('user_profiles')
+          .insert({
+            'user_id': userId,
+            'display_name': displayName,
+            'avatar_url': avatarUrl,
+          })
+          .select()
+          .single();
+
+      debugPrint('✅ Created user profile for $userId');
+      return UserProfile.fromJson(response);
+    } catch (e) {
+      debugPrint('Error creating user profile: $e');
+      return null;
+    }
+  }
+
+  /// Update user profile
+  Future<bool> updateUserProfile({
+    required String userId,
+    String? displayName,
+    String? preferredRole,
+  }) async {
+    try {
+      await client
+          .from('user_profiles')
+          .update({
+            if (displayName != null) 'display_name': displayName,
+            if (preferredRole != null) 'preferred_role': preferredRole,
+          })
+          .eq('user_id', userId);
+
+      debugPrint('✅ Updated user profile for $userId');
+      return true;
+    } catch (e) {
+      debugPrint('Error updating profile: $e');
+      return false;
     }
   }
 }

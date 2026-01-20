@@ -104,25 +104,6 @@ class _ChatScreenState extends State<ChatScreen> {
           ],
         ),
         actions: [
-          // Only show voice call for registered users
-          Obx(() {
-            if (controller.isGuestUser.value) {
-              return const SizedBox.shrink(); // Hide for guests
-            }
-            return IconButton(
-              onPressed: () {
-                Get.snackbar("Coming Soon", "Voice Calls enabled in Phase 2!");
-              },
-              icon: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.call, color: Colors.white, size: 20),
-              ),
-            );
-          }),
           // Premium Upgrade Button for non-premium registered users
           Obx(() {
             if (controller.isGuestUser.value || controller.isPremium.value) {

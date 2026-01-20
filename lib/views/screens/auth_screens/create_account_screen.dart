@@ -20,13 +20,23 @@ class CreateAccountScreen extends StatefulWidget {
 }
 
 class _CreateAccountScreenState extends State<CreateAccountScreen> {
-  String selected = "option1";
+  String? selectedRole; // Changed from roleController to dropdown selection
+  bool isAgeVerified = false; // Checkbox for age verification
+  bool isTermsAccepted = false; // Checkbox for terms acceptance
+
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController =
       TextEditingController();
-  final TextEditingController roleController = TextEditingController();
+
+  final List<String> availableRoles = [
+    'Friend',
+    'Romantic Partner',
+    'Therapist',
+    'Mentor',
+    'Creative Partner',
+  ];
 
   bool isLoading = false;
 
@@ -36,7 +46,6 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
     emailController.dispose();
     passwordController.dispose();
     confirmPasswordController.dispose();
-    roleController.dispose();
     super.dispose();
   }
 
@@ -57,15 +66,37 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
     final confirmPassword = confirmPasswordController.text.trim();
-    final role = roleController.text.trim();
 
-    debugPrint("DEBUG: Inputs - Name: $name, Email: $email, Role: $role");
+    debugPrint(
+      "DEBUG: Inputs - Name: $name, Email: $email, Role: $selectedRole",
+    );
 
     if (name.isEmpty ||
         email.isEmpty ||
         password.isEmpty ||
         confirmPassword.isEmpty) {
       _showSnack("Please fill in all fields", isError: true);
+      return;
+    }
+
+    if (selectedRole == null || selectedRole!.isEmpty) {
+      _showSnack("Please select a preferred role", isError: true);
+      return;
+    }
+
+    if (!isAgeVerified) {
+      _showSnack(
+        "You must be 18 years or older to create an account",
+        isError: true,
+      );
+      return;
+    }
+
+    if (!isTermsAccepted) {
+      _showSnack(
+        "You must agree to the Terms of Service and Privacy Policy",
+        isError: true,
+      );
       return;
     }
 
@@ -87,7 +118,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
       final AuthResponse res = await client.auth.signUp(
         email: email,
         password: password,
-        data: {'full_name': name, 'role': role},
+        data: {'full_name': name, 'role': selectedRole},
       );
 
       debugPrint("DEBUG: SignUp Response User: ${res.user}");
@@ -221,13 +252,53 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                                 showVisibilityToggle: true,
                                 isObSecure: true,
                               ),
-                              MyTextField(
-                                controller: roleController,
-                                label: "Preffered Role",
-                                prefix: Icon(Icons.lock_outline),
-                                hint: "Choose how you like Maya to support",
-                                radius: 12,
-                                suffix: Icon(Icons.arrow_drop_down),
+                              // Preferred Role Dropdown
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  MyText(text: "Preferred Role", size: 14),
+                                  const SizedBox(height: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: AppColors.primary.withValues(
+                                          alpha: 0.5,
+                                        ),
+                                      ),
+                                    ),
+                                    child: DropdownButton<String>(
+                                      value: selectedRole,
+                                      hint: MyText(
+                                        text:
+                                            "Choose how you like AI to support you",
+                                        size: 12,
+                                      ),
+                                      isExpanded: true,
+                                      underline: SizedBox(),
+                                      dropdownColor: AppColors.background,
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 14,
+                                      ),
+                                      items: availableRoles.map((role) {
+                                        return DropdownMenuItem(
+                                          value: role,
+                                          child: MyText(text: role, size: 14),
+                                        );
+                                      }).toList(),
+                                      onChanged: (value) {
+                                        setState(() {
+                                          selectedRole = value;
+                                        });
+                                      },
+                                    ),
+                                  ),
+                                ],
                               ),
                               const SizedBox(height: 20),
                               Padding(
@@ -291,19 +362,29 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _radioTile(
+                            _checkboxTile(
                               title: "I am 18 years or older",
-                              value: "option1",
+                              value: isAgeVerified,
                               subtitle:
                                   "Age verification is required to unlock mature features and ensure a safe experience.",
+                              onChanged: (val) {
+                                setState(() {
+                                  isAgeVerified = val ?? false;
+                                });
+                              },
                             ),
                             const SizedBox(height: 12),
-                            _radioTile(
+                            _checkboxTile(
                               title:
                                   "I agree to the Terms of Service and Privacy Policy",
-                              value: "option2",
+                              value: isTermsAccepted,
                               subtitle:
                                   "Your comfort and privacy always come first.",
+                              onChanged: (val) {
+                                setState(() {
+                                  isTermsAccepted = val ?? false;
+                                });
+                              },
                             ),
                           ],
                         ),
@@ -319,24 +400,20 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
     );
   }
 
-  Widget _radioTile({
+  Widget _checkboxTile({
     required String title,
-    required String value,
+    required bool value,
     required String subtitle,
+    required Function(bool?) onChanged,
   }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Radio<String>(
+        Checkbox(
           value: value,
-          // ignore: deprecated_member_use
-          groupValue: selected,
-          activeColor: Colors.white,
-          fillColor: WidgetStateProperty.all(AppColors.secondary),
-          // ignore: deprecated_member_use
-          onChanged: (val) {
-            setState(() => selected = val!);
-          },
+          activeColor: AppColors.secondary,
+          checkColor: Colors.white,
+          onChanged: onChanged,
         ),
 
         /// 🔥 Fix overflow by wrapping content with Expanded

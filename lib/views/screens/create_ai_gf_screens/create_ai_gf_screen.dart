@@ -6,6 +6,7 @@ import 'package:kraveai/views/screens/create_ai_gf_screens/widgets/advanced_sett
 import 'package:kraveai/views/screens/create_ai_gf_screens/widgets/basic_information_widget.dart';
 import 'package:kraveai/views/screens/create_ai_gf_screens/widgets/choice_voice_widget.dart';
 import 'package:kraveai/views/screens/create_ai_gf_screens/widgets/personality_builder_widget.dart';
+import 'package:kraveai/views/screens/create_ai_gf_screens/widgets/category_selector_widget.dart';
 import 'package:kraveai/views/widgets/common_image_view.dart';
 import 'package:kraveai/views/widgets/my_button.dart';
 import 'package:kraveai/views/widgets/my_text.dart';
@@ -84,6 +85,8 @@ class _CreateAiGfScreenState extends State<CreateAiGfScreen> {
                 const SizedBox(height: 20),
 
                 PersonalityBuilderWidget(),
+                const SizedBox(height: 20),
+                CategorySelectorWidget(),
                 const SizedBox(height: 20),
                 ChoiceVoiceWidget(),
                 const SizedBox(height: 20),

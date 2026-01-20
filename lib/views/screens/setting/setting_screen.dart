@@ -1,8 +1,11 @@
 import 'dart:ui';
 
 import 'package:kraveai/generated/app_colors.dart';
-import 'package:kraveai/views/screens/help_report_screens/help_support_screen.dart';
-import 'package:kraveai/views/screens/help_report_screens/report_screen.dart';
+import 'package:kraveai/services/supabase_service.dart';
+import 'package:kraveai/views/screens/auth_screens/login_screen.dart';
+import 'package:kraveai/views/screens/legal/privacy_policy_screen.dart';
+import 'package:kraveai/views/screens/legal/terms_of_service_screen.dart';
+import 'package:kraveai/views/screens/profile/profile_screen.dart';
 import 'package:kraveai/views/widgets/my_button.dart';
 import 'package:kraveai/views/widgets/my_text.dart';
 import 'package:flutter/material.dart';
@@ -16,7 +19,41 @@ class SettingScreen extends StatefulWidget {
 }
 
 class _SettingScreenState extends State<SettingScreen> {
-  List<bool> toggles = [false, false, false, false];
+  final SupabaseService _supabaseService = SupabaseService();
+  String? userEmail;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserInfo();
+  }
+
+  void _loadUserInfo() {
+    final user = _supabaseService.currentUser;
+    setState(() {
+      userEmail = user?.email;
+    });
+  }
+
+  Future<void> _logout() async {
+    try {
+      await _supabaseService.signOut();
+      Get.offAll(() => const LoginScreen());
+      Get.snackbar(
+        "Logged Out",
+        "You have been logged out successfully",
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+      );
+    } catch (e) {
+      Get.snackbar(
+        "Error",
+        "Failed to logout: $e",
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,6 +74,7 @@ class _SettingScreenState extends State<SettingScreen> {
                 ),
                 const SizedBox(height: 20),
 
+                // Account Section
                 Container(
                   width: double.maxFinite,
                   decoration: BoxDecoration(
@@ -62,216 +100,12 @@ class _SettingScreenState extends State<SettingScreen> {
                               const SizedBox(height: 20),
                               settingTile(
                                 title: "Profile",
-                                subTitle: "Edit name, email, age",
-                                ontap: () {},
-                              ),
-                              const SizedBox(height: 10),
-
-                              settingTile(
-                                title: "Security & Privacy",
-                                subTitle:
-                                    "Password, 2-step verification, data controls",
-                                ontap: () {},
-                              ),
-                              const SizedBox(height: 10),
-
-                              settingTile(
-                                title: "Preferred Role",
-                                subTitle: "Choose how AI interacts with you",
-                                ontap: () {},
-                              ),
-                              const SizedBox(height: 10),
-
-                              settingTile(
-                                title: "Blocked Models",
-                                subTitle: "View & manage blocked AI models",
-                                ontap: () {},
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                Container(
-                  width: double.maxFinite,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      width: 1.2,
-                    ),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 0, sigmaY: 0),
-                      child: Container(
-                        alignment: Alignment.center,
-                        color: Colors.white.withValues(alpha: 0.1),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              MyText(text: "Notifications", size: 15),
-                              const SizedBox(height: 20),
-                              _toggleItem("Message Alerts", 0),
-                              const SizedBox(height: 12),
-                              _toggleItem("New Model Alerts", 1),
-                              const SizedBox(height: 12),
-                              _toggleItem("Subscription Alerts", 2),
-                              const SizedBox(height: 12),
-                              _toggleItem("Sounds & Vibrations", 3),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                Container(
-                  width: double.maxFinite,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      width: 1.2,
-                    ),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 0, sigmaY: 0),
-                      child: Container(
-                        alignment: Alignment.center,
-                        color: Colors.white.withValues(alpha: 0.1),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              MyText(text: "App Preferences", size: 15),
-                              const SizedBox(height: 20),
-                              settingTile(
-                                title: "Language",
-                                subTitle: "English (Default)",
-                                ontap: () {},
-                              ),
-                              const SizedBox(height: 10),
-
-                              settingTile(
-                                title: "Chat Settings",
-                                subTitle: "Typing indicators, read receipts",
-                                ontap: () {},
-                              ),
-                              const SizedBox(height: 10),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                Container(
-                  width: double.maxFinite,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      width: 1.2,
-                    ),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 0, sigmaY: 0),
-                      child: Container(
-                        alignment: Alignment.center,
-                        color: Colors.white.withValues(alpha: 0.1),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              MyText(text: "Subscription", size: 15),
-                              const SizedBox(height: 20),
-                              settingTile(
-                                title: "My Subscription",
-                                subTitle: "Current Plan, Renewal Date",
-                                ontap: () {},
-                              ),
-                              const SizedBox(height: 10),
-
-                              settingTile(
-                                title: "Purchase History",
-                                subTitle: "List of payments",
-                                ontap: () {},
-                              ),
-                              const SizedBox(height: 10),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Container(
-                  width: double.maxFinite,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      width: 1.2,
-                    ),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 0, sigmaY: 0),
-                      child: Container(
-                        alignment: Alignment.center,
-                        color: Colors.white.withValues(alpha: 0.1),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              MyText(text: "Support & Help", size: 15),
-                              const SizedBox(height: 20),
-                              settingTile(
-                                title: "Help Center",
-                                subTitle: "FAQs, tutorials",
+                                subTitle: userEmail ?? "View your profile",
                                 ontap: () {
-                                  Get.to(() => HelpSupportScreen());
+                                  // Navigate to profile tab
+                                  Get.to(() => const ProfileScreen());
                                 },
                               ),
-                              const SizedBox(height: 10),
-
-                              settingTile(
-                                title: "Report a Problem",
-                                subTitle: "Submit an issue",
-                                ontap: () {
-                                  Get.to(() => ReportScreen());
-                                },
-                              ),
-                              const SizedBox(height: 10),
-                              const SizedBox(height: 10),
-
-                              settingTile(
-                                title: "Contact Support",
-                                subTitle: "Email / Live Chat",
-                                ontap: () {},
-                              ),
-                              const SizedBox(height: 10),
                             ],
                           ),
                         ),
@@ -280,6 +114,8 @@ class _SettingScreenState extends State<SettingScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
+
+                // About Section
                 Container(
                   width: double.maxFinite,
                   decoration: BoxDecoration(
@@ -301,23 +137,30 @@ class _SettingScreenState extends State<SettingScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              MyText(text: "Legal", size: 15),
+                              MyText(text: "About", size: 15),
                               const SizedBox(height: 20),
+                              settingTile(
+                                title: "App Version",
+                                subTitle: "1.0.0",
+                                ontap: () {},
+                                showArrow: false,
+                              ),
+                              const SizedBox(height: 10),
                               settingTile(
                                 title: "Privacy Policy",
-                                ontap: () {},
-                                isTitle: false,
+                                subTitle: "View our privacy policy",
+                                ontap: () {
+                                  Get.to(() => const PrivacyPolicyScreen());
+                                },
                               ),
                               const SizedBox(height: 10),
-
-                              settingTile(title: "Refund Policy", ontap: () {}),
-
-                              // const SizedBox(height: 10),
                               settingTile(
-                                title: "Community Guidelines",
-                                ontap: () {},
+                                title: "Terms of Service",
+                                subTitle: "View terms and conditions",
+                                ontap: () {
+                                  Get.to(() => const TermsOfServiceScreen());
+                                },
                               ),
-                              const SizedBox(height: 10),
                             ],
                           ),
                         ),
@@ -325,11 +168,14 @@ class _SettingScreenState extends State<SettingScreen> {
                     ),
                   ),
                 ),
-                SizedBox(height: 40),
+
+                const SizedBox(height: 40),
+
+                // Logout Button
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: MyButton(
-                    onTap: () {},
+                    onTap: _logout,
                     buttonText: "Logout",
                     radius: 12,
                   ),
@@ -347,7 +193,7 @@ class _SettingScreenState extends State<SettingScreen> {
     required String title,
     String? subTitle,
     required VoidCallback ontap,
-    bool isTitle = true,
+    bool showArrow = true,
   }) {
     return GestureDetector(
       onTap: ontap,
@@ -355,71 +201,30 @@ class _SettingScreenState extends State<SettingScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              MyText(text: title),
-              const SizedBox(height: 5),
-              isTitle
-                  ? MyText(
-                      text: subTitle ?? "",
-                      size: 10,
-                      color: AppColors.primary.withValues(alpha: 0.5),
-                    )
-                  : SizedBox.shrink(),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                MyText(text: title),
+                if (subTitle != null) ...[
+                  const SizedBox(height: 5),
+                  MyText(
+                    text: subTitle,
+                    size: 10,
+                    color: AppColors.primary.withValues(alpha: 0.5),
+                  ),
+                ],
+              ],
+            ),
           ),
-          Icon(
-            Icons.arrow_forward_ios_rounded,
-            color: AppColors.primary.withValues(alpha: 0.5),
-            size: 14,
-          ),
+          if (showArrow)
+            Icon(
+              Icons.arrow_forward_ios_rounded,
+              color: AppColors.primary.withValues(alpha: 0.5),
+              size: 14,
+            ),
         ],
       ),
-    );
-  }
-
-  Widget _toggleItem(String text, int index) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        MyText(text: text, size: 14),
-
-        // 🔴 Custom Toggle Button
-        GestureDetector(
-          onTap: () {
-            setState(() {
-              toggles[index] = !toggles[index];
-            });
-          },
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            height: 26,
-            width: 48,
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(30),
-              color: toggles[index]
-                  ? AppColors.secondary.withValues(alpha: 0.8)
-                  : Colors.white.withValues(alpha: 0.2),
-            ),
-            child: AnimatedAlign(
-              duration: const Duration(milliseconds: 200),
-              alignment: toggles[index]
-                  ? Alignment.centerRight
-                  : Alignment.centerLeft,
-              child: Container(
-                height: 18,
-                width: 18,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

@@ -14,23 +14,41 @@ class Assets {
   static const String aria = 'images/aria.png';
   static const String sofia = 'images/sofia.png';
 
-  // New numbered preference images
-  static const String image1 = 'images/1.webp';
+  // Female preference images (1-6)
+  static const String image1 = 'images/maya.png';
   static const String image2 = 'images/2.jpg';
-  static const String image3 = 'images/3.jfif';
-  static const String image4 = 'images/4.jfif';
-  static const String image5 = 'images/5.jfif';
-  static const String image6 = 'images/6.jfif';
-  static const String image7 = 'images/7.jfif';
+  static const String image3 = 'images/3.webp';
+  static const String image4 = 'images/4.webp';
+  static const String image5 = 'images/5.webp';
+  static const String image6 = 'images/6.jpg';
 
-  // List of all preference images
-  static const List<String> preferenceImages = [
+  // Male preference images (9-12)
+  static const String image9 = 'images/9.jfif';
+  static const String image10 = 'images/10.jfif';
+  static const String image11 = 'images/11.jpg';
+  static const String image12 = 'images/12.jpg';
+
+  // Female appearance images
+  static const List<String> femalePreferenceImages = [
     image1,
     image2,
     image3,
     image4,
     image5,
     image6,
-    image7,
+  ];
+
+  // Male appearance images
+  static const List<String> malePreferenceImages = [
+    image9,
+    image10,
+    image11,
+    image12,
+  ];
+
+  // All preference images (for backward compatibility)
+  static const List<String> preferenceImages = [
+    ...femalePreferenceImages,
+    ...malePreferenceImages,
   ];
 }
