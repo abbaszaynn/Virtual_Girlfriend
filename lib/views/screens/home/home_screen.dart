@@ -7,6 +7,7 @@ import 'package:kraveai/services/supabase_service.dart';
 import 'package:kraveai/views/screens/auth_screens/create_account_screen.dart';
 import 'package:kraveai/views/screens/auth_screens/login_screen.dart'; // For logout navigation
 import 'package:kraveai/views/screens/categories_screens/more_categories_screen.dart';
+import 'package:kraveai/views/screens/categories_screens/filtered_characters_screen.dart';
 import 'package:kraveai/views/screens/chat_screens/inbox_screen.dart';
 import 'package:kraveai/views/screens/create_ai_gf_screens/create_ai_gf_screen.dart';
 import 'package:kraveai/views/screens/home/detail_screen.dart';
@@ -34,11 +35,22 @@ class _HomeScreenState extends State<HomeScreen> {
   final SupabaseService _supabaseService = SupabaseService();
   List<Character> displayCharacterList = [];
   bool isLoadingCharacters = true;
+  bool _hasLoadedOnce = false; // Flag to track initial load
 
   @override
   void initState() {
     super.initState();
     _loadCharacters();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Reload characters when returning to this screen (not on first build)
+    if (_hasLoadedOnce) {
+      _loadCharacters();
+    }
+    _hasLoadedOnce = true;
   }
 
   Future<void> _loadCharacters() async {
@@ -64,6 +76,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 age: charData['description']?.split('yo')[0] ?? '25',
                 imagePath: charData['image_url'] ?? Assets.maya,
                 vibe: 'Custom',
+                categories: [
+                  'Custom',
+                ], // Custom characters have their own category
                 description: charData['description'] ?? '',
                 systemPrompt: charData['system_prompt'] ?? '',
                 voiceId: charData['voice_id'] ?? '21m00Tcm4TlvDq8ikWAM',
@@ -142,64 +157,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                     size: 16,
                                     color: AppColors.secondary,
                                   ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(width: 10),
-
-                        // Notifications icon
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(15),
-                          child: BackdropFilter(
-                            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-                            child: Container(
-                              height: 30,
-                              width: 30,
-                              decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(alpha: 0.2),
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.2),
-                                  width: 1.2,
-                                ),
-                              ),
-                              child: const Center(
-                                child: Icon(
-                                  Icons.notifications,
-                                  size: 16,
-                                  color: AppColors.secondary,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(width: 10),
-
-                        // Menu icon
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(15),
-                          child: BackdropFilter(
-                            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-                            child: Container(
-                              height: 30,
-                              width: 30,
-                              decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(alpha: 0.2),
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.2),
-                                  width: 1.2,
-                                ),
-                              ),
-                              child: const Center(
-                                child: Icon(
-                                  Icons.menu,
-                                  size: 16,
-                                  color: AppColors.secondary,
                                 ),
                               ),
                             ),
@@ -489,12 +446,30 @@ class _HomeScreenState extends State<HomeScreen> {
                   title: "Flirty",
                   description: "Playful, bold & romantic.",
                   emoji: "💋",
+                  onTap: () {
+                    Get.to(
+                      () => const FilteredCharactersScreen(
+                        categoryName: "Flirty",
+                        categoryDescription: "Playful, bold & romantic.",
+                        categoryEmoji: "💋",
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(height: 10),
                 CategoryCard(
                   title: "Shy",
                   description: "Soft, sweet & gentle energy.",
-                  emoji: "💋",
+                  emoji: "🤭",
+                  onTap: () {
+                    Get.to(
+                      () => const FilteredCharactersScreen(
+                        categoryName: "Shy",
+                        categoryDescription: "Soft, sweet & gentle energy.",
+                        categoryEmoji: "🤭",
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(height: 20),
                 isLoadingCharacters

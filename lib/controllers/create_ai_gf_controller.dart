@@ -20,6 +20,9 @@ class CreateAiGfController extends GetxController {
   final personalityTraits = <String>[].obs;
   final relationshipType = "Girlfriend".obs;
 
+  // Categories for filtering
+  final selectedCategories = <String>[].obs;
+
   // Voice
   final selectedVoiceId = "".obs;
 
@@ -77,12 +80,63 @@ class CreateAiGfController extends GetxController {
     try {
       final userId = client.auth.currentUser!.id;
 
-      // Construct System Prompt based on traits
+      // Construct System Prompt based on traits and gender
+      final String genderPronoun = gender.value == 'Male'
+          ? 'man'
+          : gender.value == 'Female'
+          ? 'woman'
+          : 'person';
+
+      final String genderModifier = gender.value == 'Male'
+          ? 'masculine, confident'
+          : gender.value == 'Female'
+          ? 'feminine, alluring'
+          : 'unique, engaging';
+
+      final String relationshipRole = gender.value == 'Male'
+          ? relationshipType.value
+                .replaceAll('Girlfriend', 'Boyfriend')
+                .replaceAll('girlfriend', 'boyfriend')
+          : relationshipType.value;
+
       final String systemPrompt =
-          "You are $name, a ${age.value.toInt()} year old ${ethnicity.value} woman. "
-          "You are my ${relationshipType.value}. "
+          "You are $name, a ${age.value.toInt()} year old ${ethnicity.value} $genderPronoun. "
+          "You are my $relationshipRole. "
           "Your personality is: ${personalityTraits.join(', ')}. "
+          "You are $genderModifier and embody your gender naturally. "
+          "When describing yourself or actions, always maintain your ${gender.value.toLowerCase()} perspective. "
           "You strictly follow this persona. Be engaging, human-like, and immersive.";
+
+      // Map personality traits to categories for filtering
+      final List<String> categories = List<String>.from(selectedCategories);
+
+      // Always include Custom for user-created characters
+      if (!categories.contains('Custom')) {
+        categories.add('Custom');
+      }
+
+      // If no categories selected, default to Custom only
+      if (categories.length == 1 && categories[0] == 'Custom') {
+        Get.snackbar(
+          "Tip",
+          "No categories selected. Character will only appear in 'Custom' section",
+          backgroundColor: Colors.orange,
+          colorText: Colors.white,
+        );
+      }
+
+      // Create gender-based image prompt description
+      final String imagePromptDesc;
+      if (gender.value == 'Male') {
+        imagePromptDesc =
+            "handsome $name, ${age.value.toInt()} year old ${ethnicity.value} man, ${bodyType.value} athletic build, masculine features";
+      } else if (gender.value == 'Female') {
+        imagePromptDesc =
+            "beautiful $name, ${age.value.toInt()} year old ${ethnicity.value} woman, ${bodyType.value} body type, feminine features";
+      } else {
+        imagePromptDesc =
+            "$name, ${age.value.toInt()} year old ${ethnicity.value} person, ${bodyType.value} build, attractive features";
+      }
 
       final response = await client
           .from('characters')
@@ -98,6 +152,10 @@ class CreateAiGfController extends GetxController {
                 : (gender.value == 'Male'
                       ? 'ErXwobaYiN019PkySvjV' // Antoni - Male default
                       : '21m00Tcm4TlvDq8ikWAM'), // Rachel - Female default
+            'gender': gender.value, // Save gender for image generation
+            'image_prompt_description':
+                imagePromptDesc, // Gender-based image description
+            'categories': categories, // Add categories for filtering
           })
           .select()
           .single();

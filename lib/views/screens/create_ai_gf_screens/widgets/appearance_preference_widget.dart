@@ -41,68 +41,104 @@ class AppearancePreferenceWidget extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
 
-                  // Grid of preference images
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 4,
-                          crossAxisSpacing: 10,
-                          mainAxisSpacing: 10,
-                          childAspectRatio: 0.7,
-                        ),
-                    itemCount: Assets.preferenceImages.length,
-                    itemBuilder: (context, index) {
-                      final imagePath = Assets.preferenceImages[index];
-                      return Obx(() {
-                        final isSelected =
-                            controller.selectedPreferenceImage.value ==
-                            imagePath;
-                        return GestureDetector(
-                          onTap: () {
-                            controller.selectedPreferenceImage.value =
+                  // Horizontal scrollable list of circular preference images
+                  Obx(() {
+                    // Get gender-appropriate images
+                    final List<String> imagesToShow =
+                        controller.gender.value == 'Male'
+                        ? Assets.malePreferenceImages
+                        : controller.gender.value == 'Non-binary'
+                        ? Assets
+                              .preferenceImages // Show all for non-binary
+                        : Assets.femalePreferenceImages; // Default to female
+
+                    return SizedBox(
+                      height: 100,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: imagesToShow.length,
+                        itemBuilder: (context, index) {
+                          final imagePath = imagesToShow[index];
+                          return Obx(() {
+                            final isSelected =
+                                controller.selectedPreferenceImage.value ==
                                 imagePath;
-                          },
-                          child: Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: isSelected
-                                    ? AppColors.secondary
-                                    : Colors.white.withValues(alpha: 0.25),
-                                width: isSelected ? 3 : 1.4,
-                              ),
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(10),
-                              child: Stack(
-                                fit: StackFit.expand,
-                                children: [
-                                  Image.asset(imagePath, fit: BoxFit.cover),
-                                  if (isSelected)
+                            return GestureDetector(
+                              onTap: () {
+                                controller.selectedPreferenceImage.value =
+                                    imagePath;
+                              },
+                              child: Container(
+                                margin: EdgeInsets.only(
+                                  right: index < imagesToShow.length - 1
+                                      ? 12
+                                      : 0,
+                                ),
+                                child: Column(
+                                  children: [
                                     Container(
+                                      width: 80,
+                                      height: 80,
                                       decoration: BoxDecoration(
-                                        color: AppColors.secondary.withValues(
-                                          alpha: 0.3,
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: isSelected
+                                              ? AppColors.secondary
+                                              : Colors.white.withValues(
+                                                  alpha: 0.3,
+                                                ),
+                                          width: isSelected ? 3 : 2,
                                         ),
                                       ),
-                                      child: const Center(
-                                        child: Icon(
-                                          Icons.check_circle,
-                                          color: AppColors.secondary,
-                                          size: 32,
+                                      child: ClipOval(
+                                        child: Stack(
+                                          fit: StackFit.expand,
+                                          children: [
+                                            Image.asset(
+                                              imagePath,
+                                              fit: BoxFit.cover,
+                                            ),
+                                            if (isSelected)
+                                              Container(
+                                                decoration: BoxDecoration(
+                                                  color: AppColors.secondary
+                                                      .withValues(alpha: 0.25),
+                                                ),
+                                                child: const Center(
+                                                  child: Icon(
+                                                    Icons.check_circle,
+                                                    color: AppColors.secondary,
+                                                    size: 28,
+                                                  ),
+                                                ),
+                                              ),
+                                          ],
                                         ),
                                       ),
                                     ),
-                                ],
+                                    if (isSelected)
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                          top: 4.0,
+                                        ),
+                                        child: Container(
+                                          width: 6,
+                                          height: 6,
+                                          decoration: const BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: AppColors.secondary,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
                               ),
-                            ),
-                          ),
-                        );
-                      });
-                    },
-                  ),
+                            );
+                          });
+                        },
+                      ),
+                    );
+                  }),
                 ],
               ),
             ),

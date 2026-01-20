@@ -48,6 +48,7 @@ dependencies:
   http: ^1.2.0
   device_info_plus: ^10.1.0
   uuid: ^4.5.1
+  google_sign_in: ^6.2.1
  
 
 dev_dependencies:
@@ -76,7 +77,6 @@ flutter:
   assets:
   - images/
   - images/maya.png
-  - images/elena.png
   - images/aria.png
   - images/sofia.png
   - .env

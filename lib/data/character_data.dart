@@ -8,6 +8,11 @@ List<Character> characterList = [
     age: "25",
     imagePath: Assets.image1,
     vibe: "Flirty",
+    categories: [
+      "Flirty",
+      "Bold",
+      "Passionate",
+    ], // Multiple categories for filtering
     description:
         "Maya is your bold, affectionate girlfriend who loves to tease and be naughty. She's always ready for a fun time.",
     systemPrompt:
@@ -22,6 +27,11 @@ List<Character> characterList = [
     age: "30",
     imagePath: Assets.image2,
     vibe: "Romantic",
+    categories: [
+      "Romantic",
+      "Friendly",
+      "Shy",
+    ], // Multiple categories for filtering
     description:
         "Elena is elegant, deep, and hopelessly romantic. She craves emotional connection and poetic moments.",
     systemPrompt:
@@ -37,6 +47,7 @@ List<Character> characterList = [
     age: "22",
     imagePath: Assets.image3,
     vibe: "Chill",
+    categories: ["Friendly", "Funny"], // Multiple categories for filtering
     description:
         "Aria is laid-back, funny, and your best friend who turned into something more. She loves gaming and hanging out.",
     systemPrompt:
@@ -51,6 +62,7 @@ List<Character> characterList = [
     age: "28",
     imagePath: Assets.image4,
     vibe: "Adventurous",
+    categories: ["Bold", "Dramatic"], // Multiple categories for filtering
     description:
         "Sofia is energetic, outdoorsy, and always looking for the next thrill. She's spontaneous and keeps you on your toes.",
     systemPrompt:

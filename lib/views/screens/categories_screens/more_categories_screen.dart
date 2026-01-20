@@ -1,12 +1,14 @@
 import 'package:kraveai/generated/app_colors.dart';
+import 'package:kraveai/views/screens/categories_screens/filtered_characters_screen.dart';
 import 'package:kraveai/views/widgets/categories_card.dart';
 import 'package:kraveai/views/widgets/my_text.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class MoreCategoriesScreen extends StatelessWidget {
   const MoreCategoriesScreen({super.key});
 
-  // --- Category Data ---
+  // --- Category Data (Only categories with characters) ---
   final List<Map<String, String>> categories = const [
     {"emoji": "💋", "title": "Flirty", "desc": "Playful, bold & romantic."},
     {"emoji": "🔥", "title": "Passionate", "desc": "Intense & full of fire."},
@@ -14,9 +16,7 @@ class MoreCategoriesScreen extends StatelessWidget {
     {"emoji": "🤭", "title": "Shy", "desc": "Soft, quiet & adorable."},
     {"emoji": "😈", "title": "Bold", "desc": "Fearless, daring & confident."},
     {"emoji": "🎭", "title": "Dramatic", "desc": "Expressive & emotional."},
-    {"emoji": "💼", "title": "Professional", "desc": "Smart & classy vibes."},
     {"emoji": "💘", "title": "Romantic", "desc": "Soft, loving and dreamy."},
-    {"emoji": "🤖", "title": "Cool", "desc": "Calm, composed & smooth."},
     {"emoji": "😂", "title": "Funny", "desc": "Witty, silly & fun."},
   ];
 
@@ -69,6 +69,16 @@ class MoreCategoriesScreen extends StatelessWidget {
                         emoji: cat["emoji"]!,
                         title: cat["title"]!,
                         description: cat["desc"]!,
+                        onTap: () {
+                          // Navigate to filtered characters screen
+                          Get.to(
+                            () => FilteredCharactersScreen(
+                              categoryName: cat["title"]!,
+                              categoryDescription: cat["desc"]!,
+                              categoryEmoji: cat["emoji"]!,
+                            ),
+                          );
+                        },
                       ),
                     );
                   },

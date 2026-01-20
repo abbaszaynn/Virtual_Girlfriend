@@ -1,32 +1,179 @@
 import 'dart:ui';
 
+import 'package:get/get.dart';
 import 'package:kraveai/generated/app_colors.dart';
+import 'package:kraveai/models/user_profile_model.dart';
+import 'package:kraveai/services/supabase_service.dart';
+import 'package:kraveai/views/screens/dashboard/dashboard_screen.dart';
 import 'package:kraveai/views/widgets/my_button.dart';
 import 'package:kraveai/views/widgets/my_text.dart';
 import 'package:kraveai/views/widgets/my_text_field.dart';
 import 'package:flutter/material.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
   @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  final SupabaseService _supabaseService = SupabaseService();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+
+  bool isLoading = true;
+  bool isSaving = false;
+  UserProfile? userProfile;
+  String? userEmail;
+  String? selectedRole;
+
+  // Stats
+  int messageCount = 0;
+  int imageGenCount = 0;
+  int voiceGenCount = 0;
+  int userLevel = 1; // Default for guest
+
+  // Available roles
+  final List<String> availableRoles = [
+    'Friend',
+    'Romantic Partner',
+    'Therapist',
+    'Mentor',
+    'Creative Partner',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    setState(() => isLoading = true);
+
+    try {
+      final user = _supabaseService.currentUser;
+      if (user == null) {
+        setState(() => isLoading = false);
+        return;
+      }
+
+      // Get email from auth
+      userEmail = user.email;
+      _emailController.text = userEmail ?? '';
+
+      // Get profile from database
+      userProfile = await _supabaseService.getUserProfile();
+
+      if (userProfile != null) {
+        _nameController.text = userProfile!.displayName ?? '';
+        selectedRole = userProfile!.preferredRole;
+
+        // Set user level based on authentication
+        userLevel = user.appMetadata.isEmpty ? 1 : 3;
+      }
+
+      // Load usage stats from database
+      await _loadStats(user.id);
+
+      setState(() => isLoading = false);
+    } catch (e) {
+      debugPrint('Error loading profile: $e');
+      setState(() => isLoading = false);
+    }
+  }
+
+  Future<void> _loadStats(String userId) async {
+    try {
+      // Get message count
+      final messagesResponse = await _supabaseService.client
+          .from('messages')
+          .select('id')
+          .eq('user_id', userId);
+
+      messageCount = (messagesResponse as List).length;
+
+      // For now, set image and voice counts to 0
+      // You can enhance this later when you track these separately
+      imageGenCount = 0;
+      voiceGenCount = 0;
+
+      setState(() {});
+    } catch (e) {
+      debugPrint('Error loading stats: $e');
+      // Keep default values of 0
+    }
+  }
+
+  Future<void> _saveProfile() async {
+    final user = _supabaseService.currentUser;
+    if (user == null) return;
+
+    setState(() => isSaving = true);
+
+    final success = await _supabaseService.updateUserProfile(
+      userId: user.id,
+      displayName: _nameController.text.trim(),
+      preferredRole: selectedRole,
+    );
+
+    setState(() => isSaving = false);
+
+    if (success) {
+      Get.snackbar(
+        "Success",
+        "Profile updated!",
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+      );
+      // Navigate to homepage
+      Get.offAll(() => const CustomBottomNav());
+    } else {
+      Get.snackbar(
+        "Error",
+        "Failed to update profile",
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(color: AppColors.secondary),
+        ),
+      );
+    }
+
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: MyText(text: "My Profile", size: 20),
+        centerTitle: true,
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Column(
               children: [
-                const SizedBox(height: 20),
-                Center(
-                  child: MyText(
-                    text: "My Profile",
-                    size: 24,
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                const SizedBox(height: 30),
+                const SizedBox(height: 10),
                 Column(
                   children: [
                     ClipOval(
@@ -53,6 +200,7 @@ class ProfileScreen extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: MyTextField(
+                        controller: _nameController,
                         hint: "Your Name",
                         radius: 12,
                         label: "Display Name",
@@ -61,9 +209,11 @@ class ProfileScreen extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: MyTextField(
+                        controller: _emailController,
                         hint: "your@email.com",
                         radius: 12,
                         label: "Email",
+                        isReadOnly: true, // Make email read-only
                       ),
                     ),
                     Padding(
@@ -79,6 +229,62 @@ class ProfileScreen extends StatelessWidget {
                     ),
                   ],
                 ),
+                // Preferred Role Dropdown
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 20,
+                  ),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      color: Colors.transparent,
+                      border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.5),
+                        width: 0.5,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        MyText(
+                          text: "Preferred Role",
+                          size: 12,
+                          color: AppColors.primary,
+                        ),
+                        const SizedBox(height: 8),
+                        DropdownButton<String>(
+                          value: selectedRole,
+                          hint: MyText(
+                            text: "Select how you want AI to support you",
+                            size: 14,
+                          ),
+                          isExpanded: true,
+                          underline: SizedBox(),
+                          dropdownColor: AppColors.background,
+                          style: TextStyle(color: Colors.white, fontSize: 14),
+                          items: availableRoles.map((role) {
+                            return DropdownMenuItem(
+                              value: role,
+                              child: MyText(text: role, size: 14),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              selectedRole = value;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                // Stats Section
                 Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16.0,
@@ -95,130 +301,76 @@ class ProfileScreen extends StatelessWidget {
                       ),
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10.0,
-                        vertical: 24,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              MyText(text: "Preferred Role"),
-                              const SizedBox(height: 10),
-                              MyText(
-                                text: "How do you want Maya to support?",
-                                size: 10,
-                              ),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.edit_outlined,
-                                color: AppColors.secondary,
-                              ),
-                              const SizedBox(width: 6),
-                              MyText(
-                                text: "Edit Role",
-                                size: 12,
-                                color: AppColors.secondary,
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16.0,
-                    vertical: 10,
-                  ),
-                  child: Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      color: Colors.transparent,
-                      border: Border.all(
-                        color: AppColors.primary.withValues(alpha: 0.5),
-                        width: 0.5,
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10.0,
-                        vertical: 24,
-                      ),
+                      padding: const EdgeInsets.all(16.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          MyText(text: "Stats"),
-                          const SizedBox(height: 12),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                children: [
-                                  MyText(text: "120"),
-                                  MyText(
-                                    text: "Chats",
-                                    size: 10,
-                                    color: AppColors.primary.withValues(
-                                      alpha: 0.5,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Column(
-                                children: [
-                                  MyText(text: "8"),
-                                  MyText(
-                                    text: "Unlocked Photos",
-                                    size: 10,
-                                    color: AppColors.primary.withValues(
-                                      alpha: 0.5,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Column(
-                                children: [
-                                  MyText(text: "3"),
-                                  MyText(
-                                    text: "Current Level",
-                                    size: 10,
-                                    color: AppColors.primary.withValues(
-                                      alpha: 0.5,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
+                          MyText(
+                            text: "Stats",
+                            size: 16,
+                            weight: FontWeight.w600,
+                          ),
+                          const SizedBox(height: 20),
+                          _statRow(
+                            "User Level",
+                            "Level $userLevel",
+                            Icons.stars,
+                          ),
+                          const SizedBox(height: 16),
+                          _statRow(
+                            "Messages Sent",
+                            "$messageCount",
+                            Icons.message,
+                          ),
+                          const SizedBox(height: 16),
+                          _statRow(
+                            "Images Generated",
+                            "$imageGenCount",
+                            Icons.image,
+                          ),
+                          const SizedBox(height: 16),
+                          _statRow(
+                            "Voice Messages",
+                            "$voiceGenCount",
+                            Icons.volume_up,
                           ),
                         ],
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 34),
                 Padding(
-                  padding: const EdgeInsets.only(left: 16, right: 16),
-                  child: MyButton(
-                    onTap: () {},
-                    buttonText: "Save Canges",
-                    radius: 12,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: isSaving
+                      ? CircularProgressIndicator(color: AppColors.primary)
+                      : MyButton(
+                          onTap: _saveProfile,
+                          buttonText: "Save Changes",
+                          radius: 12,
+                        ),
                 ),
-                const SizedBox(height: 34),
+                const SizedBox(height: 30),
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _statRow(String label, String value, IconData icon) {
+    return Row(
+      children: [
+        Icon(icon, color: AppColors.secondary, size: 20),
+        const SizedBox(width: 12),
+        Expanded(child: MyText(text: label, size: 14)),
+        MyText(
+          text: value,
+          size: 14,
+          weight: FontWeight.w600,
+          color: AppColors.secondary,
+        ),
+      ],
     );
   }
 }

@@ -94,6 +94,8 @@ class ChatController extends GetxController {
   final RxString playingMessageId = "".obs; // Track which message is playing
   final isAudioLoading = false.obs;
   String? voiceId; // Store voice ID
+  String? characterGender; // Store character gender for image generation
+  String? imagePromptDescription; // Store image prompt description
 
   // Controllers
   final TextEditingController textController = TextEditingController();
@@ -156,14 +158,37 @@ class ChatController extends GetxController {
       debugPrint("DEBUG: Current User ID: $userId (Guest: $isGuest)");
       debugPrint("DEBUG: Target Character ID: $characterId");
 
-      // 0. Fetch Character System Prompt AND Voice ID
+      // 0. Fetch Character System Prompt, Voice ID, Gender, AND Image Prompt Description
       final charData = await client
           .from('characters')
-          .select('system_prompt, voice_id')
+          .select('system_prompt, voice_id, gender, image_prompt_description')
           .eq('id', characterId)
           .single();
       systemPrompt = charData['system_prompt'] ?? "You are a helpful AI.";
       voiceId = charData['voice_id']; // Store voice ID
+      characterGender =
+          charData['gender']; // Store gender directly for image generation
+      imagePromptDescription =
+          charData['image_prompt_description']; // Store image prompt description
+
+      // Store gender in currentCharacter if it exists
+      if (currentCharacter != null && charData['gender'] != null) {
+        // Create a new Character object with gender included
+        currentCharacter = Character(
+          id: currentCharacter!.id,
+          name: currentCharacter!.name,
+          age: currentCharacter!.age,
+          imagePath: currentCharacter!.imagePath,
+          vibe: currentCharacter!.vibe,
+          categories: currentCharacter!.categories,
+          description: currentCharacter!.description,
+          systemPrompt: currentCharacter!.systemPrompt,
+          voiceId: currentCharacter!.voiceId,
+          imagePromptDescription: currentCharacter!.imagePromptDescription,
+          gender: charData['gender'], // Add gender from database
+        );
+      }
+
       // Hotfix: If DB still has old 'default_voice_id', fallback to Rachel
       if (voiceId == 'default_voice_id') {
         debugPrint(
@@ -171,7 +196,9 @@ class ChatController extends GetxController {
         );
         voiceId = '21m00Tcm4TlvDq8ikWAM';
       }
-      debugPrint("DEBUG: Loaded System Prompt. Voice ID: $voiceId");
+      debugPrint(
+        "DEBUG: Loaded System Prompt. Voice ID: $voiceId. Gender: $characterGender. Has Image Prompt: ${imagePromptDescription != null}",
+      );
 
       // ... existing conversation logic ...
       final data = await client
@@ -676,7 +703,18 @@ class ChatController extends GetxController {
       return;
     }
 
-    // 1. Check Daily Image Limit for non-premium users
+    // 1. Check for Male Character limit (Premium only)
+    if (!isPremium.value && characterGender == 'Male') {
+      _showPremiumUpgradeDialog(
+        title: "Premium Feature",
+        message:
+            "Generating images of male models is a Premium feature. Upgrade to unlock!",
+        feature: "male_images",
+      );
+      return;
+    }
+
+    // 2. Check Daily Image Limit for non-premium users
     if (!isPremium.value) {
       final canGenerate = await _usageService.canGenerateImage();
       if (!canGenerate) {
@@ -712,13 +750,21 @@ class ChatController extends GetxController {
       }
     }
 
-    // Use character's detailed appearance description
-    final baseAppearance =
-        currentCharacter?.imagePromptDescription ??
-        "beautiful woman with ${characterName ?? 'attractive'} features";
+    // Use character's detailed appearance description with GENDER-AWARE prompts
+
+    final String genderAppearance;
+    if (characterGender == 'Male') {
+      genderAppearance =
+          currentCharacter?.imagePromptDescription ??
+          "handsome man with ${characterName ?? 'attractive'} features, athletic build";
+    } else {
+      genderAppearance =
+          currentCharacter?.imagePromptDescription ??
+          "beautiful woman with ${characterName ?? 'attractive'} features";
+    }
 
     final imagePrompt =
-        "$baseAppearance, $contextHint, flirty expression, cinematic lighting, high quality, photorealistic";
+        "$genderAppearance, $contextHint, flirty expression, cinematic lighting, high quality, photorealistic";
     debugPrint("DEBUG: Image Generation Prompt: $imagePrompt");
 
     try {
