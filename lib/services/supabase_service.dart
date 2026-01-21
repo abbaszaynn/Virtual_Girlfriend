@@ -186,13 +186,11 @@ class SupabaseService {
     String? preferredRole,
   }) async {
     try {
-      await client
-          .from('user_profiles')
-          .update({
-            if (displayName != null) 'display_name': displayName,
-            if (preferredRole != null) 'preferred_role': preferredRole,
-          })
-          .eq('user_id', userId);
+      await client.from('user_profiles').upsert({
+        'user_id': userId,
+        if (displayName != null) 'display_name': displayName,
+        if (preferredRole != null) 'preferred_role': preferredRole,
+      }, onConflict: 'user_id');
 
       debugPrint('✅ Updated user profile for $userId');
       return true;

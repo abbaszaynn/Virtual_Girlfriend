@@ -8,6 +8,7 @@ import 'package:kraveai/views/screens/dashboard/dashboard_screen.dart';
 import 'package:kraveai/views/widgets/my_button.dart';
 import 'package:kraveai/views/widgets/my_text.dart';
 import 'package:kraveai/views/widgets/my_text_field.dart';
+import 'package:kraveai/services/usage_tracking_service.dart';
 import 'package:flutter/material.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -72,6 +73,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
         // Set user level based on authentication
         userLevel = user.appMetadata.isEmpty ? 1 : 3;
+
+        // Validation: Ensure selectedRole is in availableRoles to prevent crash
+        if (selectedRole != null &&
+            selectedRole!.isNotEmpty &&
+            !availableRoles.contains(selectedRole)) {
+          availableRoles.add(selectedRole!);
+        }
+      } else {
+        // If profile doesn't exist, try to populate from auth metadata
+        final metadata = user.userMetadata;
+        if (metadata != null) {
+          if (metadata['full_name'] != null) {
+            _nameController.text = metadata['full_name'];
+          }
+          if (metadata['role'] != null) {
+            selectedRole = metadata['role'];
+            // Check availability for metadata role too
+            if (selectedRole != null &&
+                selectedRole!.isNotEmpty &&
+                !availableRoles.contains(selectedRole)) {
+              availableRoles.add(selectedRole!);
+            }
+          }
+        }
       }
 
       // Load usage stats from database
@@ -86,23 +111,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _loadStats(String userId) async {
     try {
-      // Get message count
-      final messagesResponse = await _supabaseService.client
-          .from('messages')
-          .select('id')
-          .eq('user_id', userId);
+      final usageTracking = UsageTrackingService();
+      final usage = await usageTracking.getCurrentUsage();
 
-      messageCount = (messagesResponse as List).length;
-
-      // For now, set image and voice counts to 0
-      // You can enhance this later when you track these separately
-      imageGenCount = 0;
-      voiceGenCount = 0;
+      messageCount = usage['messages'] ?? 0;
+      imageGenCount = usage['images'] ?? 0;
+      voiceGenCount = usage['voice'] ?? 0;
 
       setState(() {});
     } catch (e) {
       debugPrint('Error loading stats: $e');
-      // Keep default values of 0
     }
   }
 
