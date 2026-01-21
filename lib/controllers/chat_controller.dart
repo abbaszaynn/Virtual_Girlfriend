@@ -39,7 +39,7 @@ class ChatController extends GetxController {
   final RxInt dailyMessageCount = 0.obs;
   final RxInt dailyImageCount = 0.obs;
   final RxInt dailyVoiceCount = 0.obs;
-  final RxInt messageLimit = 10.obs;
+  final RxInt messageLimit = 20.obs;
   final RxInt imageLimit = 2.obs;
   final RxInt voiceLimit = 2.obs;
 
@@ -82,7 +82,7 @@ class ChatController extends GetxController {
       dailyVoiceCount.value = usage['voice'] ?? 0;
 
       debugPrint(
-        "✅ Usage stats loaded - Messages: ${dailyMessageCount.value}/10, Images: ${dailyImageCount.value}/2, Voice: ${dailyVoiceCount.value}/2, Premium: ${isPremium.value}",
+        "✅ Usage stats loaded - Messages: ${dailyMessageCount.value}/20, Images: ${dailyImageCount.value}/2, Voice: ${dailyVoiceCount.value}/2, Premium: ${isPremium.value}",
       );
     } catch (e) {
       debugPrint("ERROR loading usage stats: $e");
@@ -462,7 +462,7 @@ class ChatController extends GetxController {
           _showPremiumUpgradeDialog(
             title: "Daily Message Limit Reached",
             message:
-                "You've sent 10 messages today. Upgrade to Premium for unlimited messages!",
+                "You've sent 20 messages today. Upgrade to Premium for unlimited messages!",
             feature: "messages",
           );
           return;
@@ -511,7 +511,7 @@ class ChatController extends GetxController {
         dailyMessageCount.value =
             (await _usageService.getCurrentUsage())['messages'] ?? 0;
         debugPrint(
-          "DEBUG: Registered user message count: ${dailyMessageCount.value}/10",
+          "DEBUG: Registered user message count: ${dailyMessageCount.value}/20",
         );
       }
 

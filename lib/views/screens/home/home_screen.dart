@@ -506,7 +506,27 @@ class _HomeScreenState extends State<HomeScreen> {
                   padding: const EdgeInsets.all(20.0),
                   child: MyBorderButton(
                     buttonText: "See More",
-                    onTap: () {},
+                    onTap: () {
+                      Get.dialog(
+                        AlertDialog(
+                          backgroundColor: const Color(0xFF1A1A1A),
+                          title: const Text(
+                            "Create by yourself",
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          content: const Text(
+                            "There are no further characters.",
+                            style: TextStyle(color: Colors.white70),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: const Text("OK"),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
                     bgColor: Colors.transparent,
                     borderColor: AppColors.secondary,
                     radius: 16,

@@ -62,8 +62,8 @@ class UsageIndicatorWidget extends StatelessWidget {
             _buildUsagePill(
               icon: Icons.message,
               current: messages,
-              limit: 10,
-              color: _getUsageColor(messages, 10),
+              limit: controller.messageLimit.value,
+              color: _getUsageColor(messages, controller.messageLimit.value),
             ),
             const SizedBox(width: 8),
             _buildUsagePill(

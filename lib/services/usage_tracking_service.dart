@@ -6,7 +6,7 @@ class UsageTrackingService {
   final SupabaseClient _client = SupabaseService().client;
 
   // Daily limits for free users
-  static const int messageLimit = 10;
+  static const int messageLimit = 20;
   static const int imageLimit = 2;
   static const int voiceLimit = 2;
 

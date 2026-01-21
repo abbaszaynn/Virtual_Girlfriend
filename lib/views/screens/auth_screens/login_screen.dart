@@ -1,5 +1,4 @@
 import 'dart:ui';
-
 import 'package:kraveai/generated/app_colors.dart';
 import 'package:kraveai/generated/assets.dart';
 import 'package:kraveai/services/supabase_service.dart';
@@ -13,7 +12,6 @@ import 'package:kraveai/views/widgets/my_text.dart';
 import 'package:kraveai/views/widgets/my_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -28,75 +26,12 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController passwordController = TextEditingController();
 
   bool isLoading = false;
-  final SupabaseService _supabaseService = SupabaseService();
 
   @override
   void dispose() {
     emailController.dispose();
     passwordController.dispose();
     super.dispose();
-  }
-
-  Future<void> _signInWithGoogle() async {
-    try {
-      // Initialize Google Sign In
-      final GoogleSignIn googleSignIn = GoogleSignIn(
-        serverClientId: '', // Will work without this for now
-      );
-
-      // Trigger Google Sign In flow
-      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
-      if (googleUser == null) {
-        // User canceled the sign-in
-        return;
-      }
-
-      // Get auth details
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
-
-      // Sign in to Supabase with Google credentials
-      final AuthResponse res = await _supabaseService.client.auth
-          .signInWithIdToken(
-            provider: OAuthProvider.google,
-            idToken: googleAuth.idToken!,
-            accessToken: googleAuth.accessToken,
-          );
-
-      if (res.user != null) {
-        // Check if profile exists, create if not
-        final profile = await _supabaseService.getUserProfile();
-
-        if (profile == null) {
-          // First time login - create profile
-          await _supabaseService.createUserProfile(
-            userId: res.user!.id,
-            displayName:
-                res.user!.userMetadata?['full_name'] ??
-                res.user!.email?.split('@')[0] ??
-                'User',
-            avatarUrl: res.user!.userMetadata?['avatar_url'],
-          );
-          debugPrint('✅ Created new user profile');
-        }
-
-        // Success - navigate to home
-        Get.offAll(() => const CustomBottomNav());
-        Get.snackbar(
-          "Success",
-          "Welcome ${res.user!.email}!",
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-        );
-      }
-    } catch (e) {
-      Get.snackbar(
-        "Error",
-        "Google sign-in failed: $e",
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-    }
   }
 
   Future<void> _login() async {
@@ -280,60 +215,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 30),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Divider(
-                        color: Colors.white.withValues(alpha: 0.2),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: MyText(text: "or sign up with", size: 12),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Divider(
-                        color: Colors.white.withValues(alpha: 0.2),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 30),
-                // Google Sign-In Button (centered)
-                Center(
-                  child: GestureDetector(
-                    onTap: _signInWithGoogle,
-                    child: Container(
-                      width: 64,
-                      height: 64,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: const Color(0xFFE8E6EA).withValues(alpha: 0.4),
-                          width: 1.2,
-                        ),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 0, sigmaY: 0),
-                          child: Container(
-                            alignment: Alignment.center,
-                            color: Colors.white.withValues(alpha: 0.1),
-                            child: CommonImageView(
-                              imagePath: Assets.google,
-                              height: 30,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 30),
+                const SizedBox(height: 40),
 
                 // Create Account Button (Primary Action)
                 Padding(
